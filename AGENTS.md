@@ -23,3 +23,13 @@ Git history is not available in this checkout, so no established commit conventi
 ## Configuration & Secrets
 
 Keep credentials and local-only settings out of version control. Provide safe example configuration with placeholder values and document required environment variables when the application setup is added.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues; use `gh`. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+Single-context layout. See `docs/agents/domain.md`.
