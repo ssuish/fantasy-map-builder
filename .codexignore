@@ -1,0 +1,4 @@
+CREDENTIALS.md
+.env
+.env.*
+!.env.example

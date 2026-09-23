@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "skills": {
+    "application-design-center-design-deploy": {
+      "source": "google/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cloud/application-design-center-design-deploy/SKILL.md",
+      "computedHash": "ccd85220fca9428b4e29bba07163c0a803abd52ac86c91631232cb185b70c0fc"
+    },
+    "cloud-run-alert-configuration": {
+      "source": "google/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cloud/cloud-run-alert-configuration/SKILL.md",
+      "computedHash": "76685ccf56b784236d60c72959206bcd35d91ccd4c068be4fc7c42b43b0486b6"
+    },
+    "cloud-run-basics": {
+      "source": "google/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cloud/cloud-run-basics/SKILL.md",
+      "computedHash": "a0446f5d1ce8edcb6413b34b7ee5f9a50941f7813dc12a650b258dd6f5435c50"
+    },
+    "gcloud": {
+      "source": "google/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cloud/gcloud/SKILL.md",
+      "computedHash": "8c6ef3bac2e79d70a48010c9637eef9b7a0c871361a2ded9b2bdc97c9047a83f"
+    },
+    "google-cloud-solution-architecture": {
+      "source": "google/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cloud/google-cloud-solution-architecture/SKILL.md",
+      "computedHash": "3c3e236cd4c167058a39bd753ec067c24299a8c58193457489c5e5f7b641e0cc"
+    },
+    "google-cloud-waf-cost-optimization": {
+      "source": "google/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cloud/google-cloud-waf-cost-optimization/SKILL.md",
+      "computedHash": "a5b30c0478b7147c0b090e997c67cc011cfa0f24aed6229c6f1aa1bfd367121c"
+    },
+    "google-cloud-waf-operational-excellence": {
+      "source": "google/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cloud/google-cloud-waf-operational-excellence/SKILL.md",
+      "computedHash": "badbc9743b21061e8f014d510308e80b15dcddfff0ef8a7194627b1ee88686b9"
+    },
+    "google-cloud-waf-performance-optimization": {
+      "source": "google/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cloud/google-cloud-waf-performance-optimization/SKILL.md",
+      "computedHash": "4382e388937dbe9f77942158e850a6ef8ca0b04e65b72d2cb340e8796164f9bd"
+    },
+    "google-cloud-waf-reliability": {
+      "source": "google/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cloud/google-cloud-waf-reliability/SKILL.md",
+      "computedHash": "9881cb7be2be2556635c87daa280ac1df652a430997b113c7a1b630ff0c07e14"
+    },
+    "google-cloud-waf-security": {
+      "source": "google/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cloud/google-cloud-waf-security/SKILL.md",
+      "computedHash": "ab0c355c033001b7ec182705a1c0c5a1255a22c3fb0ef269ce53c3e16f63bcf3"
+    },
+    "google-cloud-waf-sustainability": {
+      "source": "google/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cloud/google-cloud-waf-sustainability/SKILL.md",
+      "computedHash": "78f982c4e3d64dec807787e9b85ce00384575cd060b70bd6bbf36afa04afeb1c"
+    }
+  }
+}

@@ -1,6 +1,8 @@
-/docs
-!/docs/
-/docs/*
-!/docs/agents/
-/docs/agents/*
+/docs/adr
 !/docs/agents/*.md
+.codex/
+CREDENTIALS.md
+.env
+.env.*
+!.env.example
+.agents/
