@@ -1,61 +1,62 @@
-# 🚀 Getting started with Strapi
+# Atlas CMS
 
-Strapi comes with a full featured [Command Line Interface](https://docs.strapi.io/dev-docs/cli) (CLI) which lets you scaffold and manage your project in seconds.
+Atlas CMS is the Strapi 5 backend in the Fantasy Map Builder npm workspace. It provides the server foundation for map content and publishing workflows.
 
-### `develop`
+## Current status
 
-Start your Strapi application with autoReload enabled. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-develop)
+The current Phase 0 service is a walking skeleton:
 
-```
-npm run develop
-# or
-yarn develop
-```
+- Root `compose.yaml` runs Strapi with local PostgreSQL; the Phase 0 health smoke has been verified.
+- `GET /api/health` is public and returns `{ "status": "ok" }`.
+- The health route confirms the HTTP service is responding. It does not check database connectivity.
+- Product content types, map authoring APIs, authentication workflows, and object storage integration are future work.
+- Compose starts MinIO as a local object-store service, but Strapi is not yet configured to use it. Cloud Run deployment is planned, not completed.
 
-### `start`
+## Run locally
 
-Start your Strapi application with autoReload disabled. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-start)
+Use Node 24 and Docker. From the repository root:
 
-```
-npm run start
-# or
-yarn start
-```
-
-### `build`
-
-Build your admin panel. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-build)
-
-```
-npm run build
-# or
-yarn build
+```sh
+npm ci
+docker compose up --build cms
 ```
 
-## ⚙️ Deployment
+Compose starts PostgreSQL as a dependency of the CMS. The Strapi admin is at [http://localhost:1337/admin](http://localhost:1337/admin), and the health endpoint is [http://localhost:1337/api/health](http://localhost:1337/api/health).
 
-Strapi gives you many possible deployment options for your project including [Strapi Cloud](https://cloud.strapi.io). Browse the [deployment section of the documentation](https://docs.strapi.io/dev-docs/deployment) to find the best solution for your use case.
+The local PostgreSQL container is also exposed on `127.0.0.1:5433`. The `postgres` hostname is for containers on the Compose network; a Strapi process started directly on the host must set `DATABASE_HOST=127.0.0.1` and `DATABASE_PORT=5433` in the local `.env`. To start Strapi directly from the repository root, use `npm run dev:cms` and provide local-only values in an ignored `atlas-cms/.env`. The checked-in `atlas-cms/.env.example` contains values aligned with root Compose for local development only; they are not production credentials.
 
+Stop the services with:
+
+```sh
+docker compose down
 ```
-yarn strapi deploy
+
+This keeps the named PostgreSQL and object-store volumes. Do not reuse Compose credentials outside local development.
+
+## CMS checks
+
+Run these commands from the repository root:
+
+```sh
+npm test --workspace=atlas-cms
+npx tsc -p atlas-cms/tsconfig.json --noEmit --pretty false
+npm run build --workspace=atlas-cms
 ```
 
-## 📚 Learn more
+The focused test covers the health response and its unauthenticated route configuration. The repository-wide `npm test` and `npm run build` run checks across workspaces.
 
-- [Resource center](https://strapi.io/resource-center) - Strapi resource center.
-- [Strapi documentation](https://docs.strapi.io) - Official Strapi documentation.
-- [Strapi tutorials](https://strapi.io/tutorials) - List of tutorials made by the core team and the community.
-- [Strapi blog](https://strapi.io/blog) - Official Strapi blog containing articles made by the Strapi team and the community.
-- [Changelog](https://strapi.io/changelog) - Find out about the Strapi product updates, new features and general improvements.
+## Configuration and secrets
 
-Feel free to check out the [Strapi GitHub repository](https://github.com/strapi/strapi). Your feedback and contributions are welcome!
+The server binds to `0.0.0.0` and reads its port from `PORT`, as required by the container runtime. Compose supplies fake local Strapi keys and PostgreSQL settings directly to the container. `atlas-cms/.env.example` documents development-only local settings; keep real credentials in private local environment files or the deployment secret store.
 
-## ✨ Community
+Never read, quote, commit, or transmit `CREDENTIALS.md` or real `.env` files. Do not place real credentials in this README, Compose configuration, or `.env.example`.
 
-- [Discord](https://discord.strapi.io) - Come chat with the Strapi community including the core team.
-- [Forum](https://forum.strapi.io/) - Place to discuss, ask questions and find answers, show your Strapi project and get feedback or just talk with other Community members.
-- [Awesome Strapi](https://github.com/strapi/awesome-strapi) - A curated list of awesome things related to Strapi.
+## Container
 
----
+The CMS Dockerfile expects the repository root as its build context because it installs and builds npm workspaces:
 
-<sub>🤫 Psst! [Strapi is hiring](https://strapi.io/careers).</sub>
+```sh
+docker compose build cms
+```
+
+The image runs Strapi in production mode and honors the runtime `PORT`. An image build is local verification only; it does not deploy the service.
