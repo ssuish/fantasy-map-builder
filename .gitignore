@@ -1,8 +1,14 @@
-/docs/adr
 !/docs/agents/*.md
+/docs/agents/plans/
+/docs/agents/build-logs/
 .codex/
 CREDENTIALS.md
 .env
 .env.*
 !.env.example
 .agents/
+node_modules/
+dist/
+coverage/
+playwright-report/
+test-results/
