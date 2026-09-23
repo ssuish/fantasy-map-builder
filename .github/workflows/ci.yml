@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  phase-zero:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run verify -- --task ci
+      - run: npm run test:browser -w atlas
+      - run: docker compose up -d --build postgres object-store cms
+      - name: Check CMS health
+        run: |
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:1337/api/health; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker compose logs cms postgres
+          exit 1
+      - if: always()
+        run: docker compose down -v
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase-zero-status
+          path: docs/agents/build-logs/ci/STATUS.md
+          if-no-files-found: ignore

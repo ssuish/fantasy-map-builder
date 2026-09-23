@@ -1,0 +1,57 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: atlas
+      POSTGRES_USER: atlas
+      POSTGRES_PASSWORD: atlas-local-only
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - atlas-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U atlas -d atlas"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  object-store:
+    image: quay.io/minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
+    command: server /data --console-address :9001
+    environment:
+      MINIO_ROOT_USER: atlas-local
+      MINIO_ROOT_PASSWORD: atlas-local-only-password
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - atlas-object-store:/data
+
+  cms:
+    build:
+      context: .
+      dockerfile: atlas-cms/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      HOST: 0.0.0.0
+      PORT: "1337"
+      APP_KEYS: local-only-key-one,local-only-key-two
+      API_TOKEN_SALT: local-only-api-salt
+      ADMIN_JWT_SECRET: local-only-admin-jwt-secret
+      TRANSFER_TOKEN_SALT: local-only-transfer-salt
+      JWT_SECRET: local-only-jwt-secret
+      ENCRYPTION_KEY: local-only-encryption-key
+      DATABASE_CLIENT: postgres
+      DATABASE_HOST: postgres
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: atlas
+      DATABASE_USERNAME: atlas
+      DATABASE_PASSWORD: atlas-local-only
+    ports:
+      - "127.0.0.1:1337:1337"
+
+volumes:
+  atlas-postgres:
+  atlas-object-store:
