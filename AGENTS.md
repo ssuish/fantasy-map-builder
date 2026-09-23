@@ -2,11 +2,11 @@
 
 ## Project Structure & Module Organization
 
-`atlas/` is the PixiJS 8 and Vite TypeScript frontend. `atlas-cms/` is the Strapi 5 TypeScript backend. Each app has its own `package.json` and `package-lock.json`; run npm commands from the app directory. Place tests beside their implementation or in an established test directory. Shared packages and a root workspace have not been created; confirm their layout before introducing one.
+The root npm workspace contains `atlas/` (React, PixiJS, and Vite), `atlas-cms/` (Strapi), and `packages/contracts/` (shared static-map contract). Use the root `package-lock.json` and run workspace commands from the repository root. App-specific instructions live in each app's `AGENTS.md`. Keep shared code in focused packages rather than duplicating contracts.
 
 ## Build, Test, and Development Commands
 
-Frontend: `cd atlas && npm run dev`, `npm run lint`, and `npm run build` (lint, TypeScript, Vite). Backend: `cd atlas-cms && npm run dev`, `npm run build`, and `npm run start`. No root build command or test script exists yet. Run relevant checks in the affected app and report checks that could not be run.
+Run `npm ci` at the root. Use `npm run dev:web` and `npm run dev:cms` for local apps; use `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`, and `npm run verify -- --task <slug>` for checks. `docker compose up --build` starts the local CMS, PostgreSQL, and object store. Run relevant checks before submitting changes and report checks that could not be run.
 
 ## Coding Style & Naming Conventions
 
@@ -14,7 +14,7 @@ Follow the formatter, linter, and language conventions adopted by the project wh
 
 ## Testing Guidelines
 
-Neither app has a test script or coverage policy yet. Add tests with the framework chosen for the affected app, name test files clearly (such as `*.test.ts`), and cover observable behavior and relevant edge cases. Include the exact test command in the pull request.
+Put tests beside their implementation or in the app's test directory. Cover observable behavior and relevant edge cases, including shared contracts and health routes. Run affected tests and include the exact command in the pull request.
 
 ## Commit & Pull Request Guidelines
 
@@ -22,7 +22,7 @@ Write concise, imperative commit subjects that describe the change. Pull request
 
 ## Configuration & Secrets
 
-`CREDENTIALS.md` and all `.env` variants except `.env.example` are private. Do not read, search, quote, copy, stage, or transmit their contents. Check file names or ignore status without opening them when needed. Keep these files out of version control; `.codexignore` is an agent context hint, not a substitute for Git ignore rules. Add only placeholder values to `.env.example` files and document required variables there.
+`CREDENTIALS.md` and all `.env` variants except `.env.example` are private. Do not read, search, quote, copy, stage, or transmit their contents. Check file names or ignore status without opening them when needed. Keep these files out of version control and Docker build contexts. Add only placeholder values to `.env.example` files and document required variables there.
 
 ## Agent skills
 
@@ -40,10 +40,20 @@ Single-context layout. See `docs/agents/domain.md`.
 - For Strapi work in `atlas-cms/`, use `atlas-cms/.agents/skills/strapi-docs-mcp/SKILL.md` and current Strapi documentation.
 - For Google Cloud Run or `gcloud` work, use the matching skill under `.agents/skills/` (notably `cloud-run-basics` and `gcloud`). Use other Google Cloud architecture, alerting, or Well-Architected skills only when the task calls for them.
 - `skills-lock.json` in each app records installed skill sources. Do not treat it as an application dependency lockfile.
+- Installed skills and `.codex/` are local-only. When absent, use current official documentation and the tracked setup instructions.
+
+## Plan files
+
+- When Plan mode produces an implementation plan, save its final version as `docs/agents/plans/<slug>/PLAN.md`. Use a short lowercase kebab-case slug from the plan name; create the directory if needed. Include the goal, scope, implementation steps, and validation criteria. Give the file path in the final response.
+- When asked to implement an existing plan, find its `PLAN.md` under `docs/agents/plans/` by name or slug and use it as task context. If Plan mode does not permit file writes, provide the plan in the response and save it when write access resumes.
+
+## Build evidence
+
+- Run `npm run verify -- --task <slug>` to write a concise, Git-ignored status under `docs/agents/build-logs/<slug>/STATUS.md`. Reuse a result only if Git HEAD and the working-tree fingerprint still match; otherwise rerun affected checks. Never put secrets or raw application logs in the status file.
 
 ## Agent workflow
 
-- Use the primary GPT-5.6 Sol agent for planning, architecture, ambiguity
+- Use the primary GPT-6 Sol agent for planning, architecture, ambiguity
   resolution, integration decisions, and final synthesis.
 - Delegate clear, bounded, independently verifiable implementation, research,
   test, script, and batch tasks to `luna_worker` when delegation saves primary

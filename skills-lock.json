@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "strapi-docs-mcp": {
+      "source": "strapi/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cms/strapi-docs-mcp/SKILL.md",
+      "computedHash": "1aa149a4433ebce5c5bb048943a87b1dc355c8c54a4eac0eab81a6e0c1ce8aa3"
+    }
+  }
+}

@@ -4,42 +4,30 @@
 
 Build vertical slices that remain deployable. Prove map rendering, persistence, and publication risks before polishing the full editor. Every phase ends with observable behavior and automated checks.
 
-## Proposed repository layout
+## Current repository layout
 
 ```text
-apps/
-  web/                 React/Vite Creator and Explorer SPA
-  cms/                 Strapi application and custom backend modules
+atlas/                 React, PixiJS, and Vite frontend
+atlas-cms/             Strapi application and Cloud Run container
 packages/
-  domain/              Shared domain values, commands, manifests, schemas
-  map-engine/          Terrain Engine and Canvas Document
-  contracts/           Versioned HTTP and release-manifest contracts
-  test-support/        Deterministic fixtures and in-memory adapters
-public/
-  stamps/              Built-in licensed/original sprite sheets
-docs/
-  adr/
+  contracts/           Shared static-map manifest contract
+docs/                  Product, architecture, and agent guidance
+compose.yaml           Local CMS, PostgreSQL, and S3-compatible storage
 ```
 
-Use one TypeScript workspace so frontend, backend, workers, contracts, and tests share schema types without copying them. Keep runtime-specific code out of `domain` and `contracts`.
+The root npm workspace has one lockfile. Add `domain`, `map-engine`, and `test-support` packages when their Phase 1–3 interfaces are implemented; do not create empty packages now. Keep runtime-specific code out of `contracts`.
 
 ## Phase 0: Foundation and walking skeleton
 
-### Deliverables
+### Progress checklist
 
-- TypeScript workspace, formatting, linting, Vitest, Playwright, and CI.
-- React/Vite shell deployed to Firebase Hosting preview.
-- Strapi container running locally and on Cloud Run staging.
-- Neon pooled PostgreSQL connection.
-- Private and public R2 buckets with least-privilege credentials and exact CORS rules.
-- Health endpoints, structured logging, secrets documentation, and budget alerts.
-- One static public map manifest rendered by PixiJS from R2.
+See the [dated Phase 0 checklist](agents/phase-0-progress.md) for verified local work and remaining gates. Local components and the Compose runtime smoke are implemented; CI and cloud staging remain open.
 
 ### Exit checks
 
-- CI builds and tests both applications.
-- Staging deployment serves SPA, API health, and one immutable map asset.
-- Private bucket is not publicly readable; public bucket works only through intended production/development paths.
+- CI builds and tests both applications and the shared contract from a clean root install.
+- Local Compose starts PostgreSQL, object store, and CMS; API health is available.
+- Staging serves the SPA, healthy API, and immutable public map while private R2 objects deny anonymous reads.
 
 ## Phase 1: Terrain Engine and viewport
 

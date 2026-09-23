@@ -1,5 +1,14 @@
 # Fantasy Map Builder MVP Technical Design
 
+
+## Implementation status and repository boundaries
+
+The diagram and deep modules below describe the target MVP, not deployed infrastructure. Current Phase 0 code lives in the root npm workspace: `atlas/` (React, PixiJS, Vite), `atlas-cms/` (Strapi), and `packages/contracts/` (a versioned static-map manifest). `compose.yaml` runs local Strapi, PostgreSQL, and S3-compatible storage; Firebase Hosting, Cloud Run, Neon, and R2 are not provisioned yet.
+
+The Phase 0 static manifest is a walking-skeleton contract. It carries one image URL for a 2048×1024 map and is not the full Published Version manifest described later. The local fixture can change; staging uses an immutable release key. Future Terrain Engine, Canvas Document, Draft Persistence, and Publication modules remain unimplemented.
+
+The browser renders DOM controls in React and map content through `@pixi/react` v8. The backend exposes a minimal unauthenticated health route. Local object storage validates development wiring only; staging must verify R2's presigned URL, CORS, and metadata behavior separately.
+
 ## Design goals
 
 - Keep the high-frequency editor responsive on ordinary desktop hardware.
@@ -40,7 +49,7 @@ Place Cloud Run and Neon in the closest practical regions and measure cross-prov
 
 Use a TypeScript React SPA built with Vite. React owns routing, dialogs, forms, Lore editing, search, authentication state, and accessible controls. PixiJS owns the high-frequency map viewport.
 
-Do not mirror pointer movement or every brush sample into React state. A thin React adapter mounts one PixiJS application and communicates with the editor through commands and coarse observable state such as selection, save status, and active tool.
+Do not mirror pointer movement or every brush sample into React state. `@pixi/react` mounts the PixiJS application and scene; the future editor communicates with the map engine through commands and coarse observable state such as selection, save status, and active tool.
 
 PixiJS should use its production-recommended WebGL renderer. Terrain buffers become dynamic texture sources; stamps come from sprite sheets; strokes and Hotspots use retained scene objects. The published map uses a flattened base texture plus lightweight interactive overlays.
 
