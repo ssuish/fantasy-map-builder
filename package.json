@@ -14,8 +14,8 @@
     "dev:web": "npm run dev -w atlas",
     "dev:cms": "npm run dev -w atlas-cms",
     "lint": "npm run lint --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run build -w @atlas/contracts && npm run typecheck --workspaces --if-present",
+    "test": "npm run build -w @atlas/contracts && npm run test --workspaces --if-present",
     "build": "npm run build -w @atlas/contracts && npm run build -w atlas && npm run build -w atlas-cms",
     "verify": "node scripts/verify.mjs"
   },
