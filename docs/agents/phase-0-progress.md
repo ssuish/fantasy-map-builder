@@ -14,7 +14,7 @@ Last reviewed: 2026-09-27. Check completed items against the current Git state b
 - [x] Root `npm run verify -- --task phase-zero-initialization` passed lint, typecheck, tests, and both builds on 2026-09-24. This historical result does not validate the current working tree.
 - [x] Root `npm run verify -- --task align-mvp-plan-and-issues` passed lint, typecheck, tests, and both builds locally on 2026-09-27; it is not CI or staging evidence.
 - [x] Local PostgreSQL, object store, and CMS started. `GET /api/health` returned HTTP 200 with `{ "status": "ok" }`, PostgreSQL held 43 Strapi tables, and a temporary object-store write/readback passed; the smoke object and bucket were removed.
-- [ ] Confirm GitHub Actions CI passes on a pushed commit. A local pass is not a CI pass.
+- [x] [GitHub Actions CI run #36269556841](https://github.com/ssuish/fantasy-map-builder/actions/runs/36269556841) passed on pushed commit `e16fe66`, covering verification, the production-bundle browser smoke, and PostgreSQL/CMS container health on port 8080.
 - [ ] Triage the four high production-scope dependency audit entries in [issue #19](https://github.com/ssuish/fantasy-map-builder/issues/19) before staging; audit output alone does not establish runtime exposure.
 - [x] GitHub issues were checked against the product spec and current repository layout; issue #1 tracks remaining Phase 0 gates.
 
@@ -28,4 +28,4 @@ Last reviewed: 2026-09-27. Check completed items against the current Git state b
 - [ ] Connect `atlas-assets-staging.kofeejan.com` to the published bucket, configure exact R2 CORS and least-privilege credentials, and establish Google Cloud, Neon, and R2 budget alerts.
 - [ ] Deploy SPA and CMS; verify healthy API backed by Neon, one immutable public map through R2, exact CORS, and anonymous denial for a known private object.
 
-Phase 0 remains open until CI and cloud staging checks pass. Local S3-compatible storage cannot establish R2 behavior. Resource creation alone does not prove deployment, database connectivity, browser access, or budget alerts.
+Phase 0 remains open until cloud staging checks pass. Local S3-compatible storage cannot establish R2 behavior. Resource creation alone does not prove deployment, database connectivity, browser access, or budget alerts.
