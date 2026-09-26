@@ -10,6 +10,8 @@ permissions:
 jobs:
   phase-zero:
     runs-on: ubuntu-latest
+    env:
+      CMS_PORT: "8080"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -20,11 +22,11 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run verify -- --task ci
       - run: npm run test:browser -w atlas
-      - run: docker compose up -d --build postgres object-store cms
+      - run: docker compose up -d --build postgres cms
       - name: Check CMS health
         run: |
           for attempt in $(seq 1 60); do
-            if curl --fail --silent http://127.0.0.1:1337/api/health; then
+            if curl --fail --silent http://127.0.0.1:${CMS_PORT}/api/health; then
               exit 0
             fi
             sleep 2

@@ -36,7 +36,7 @@ services:
         condition: service_healthy
     environment:
       HOST: 0.0.0.0
-      PORT: "1337"
+      PORT: "${CMS_PORT:-1337}"
       APP_KEYS: local-only-key-one,local-only-key-two
       API_TOKEN_SALT: local-only-api-salt
       ADMIN_JWT_SECRET: local-only-admin-jwt-secret
@@ -50,7 +50,7 @@ services:
       DATABASE_USERNAME: atlas
       DATABASE_PASSWORD: atlas-local-only
     ports:
-      - "127.0.0.1:1337:1337"
+      - "127.0.0.1:${CMS_PORT:-1337}:${CMS_PORT:-1337}"
 
 volumes:
   atlas-postgres:
