@@ -1,5 +1,6 @@
 .git
 .codex
+.neon
 .agents
 **/.agents
 **/node_modules

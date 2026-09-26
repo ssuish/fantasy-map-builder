@@ -21,7 +21,7 @@ The root npm workspace has one lockfile. Add `domain`, `map-engine`, and `test-s
 
 ### Progress checklist
 
-See the [dated Phase 0 checklist](agents/phase-0-progress.md) for verified local work and remaining gates. Local components and the Compose runtime smoke are implemented; CI and cloud staging remain open.
+See the [dated Phase 0 checklist](agents/phase-0-progress.md) for verified local work and remaining gates. Local components and the Compose runtime smoke are implemented. The Neon staging branch and R2 buckets exist, and the reported Google Cloud project is integrated with Firebase; CI and cloud deployment checks remain open.
 
 ### Exit checks
 
@@ -45,7 +45,7 @@ See the [dated Phase 0 checklist](agents/phase-0-progress.md) for verified local
 - Golden seed tests are deterministic.
 - Seam painting and rendering are continuous.
 - Brush updates recompute only dirty tiles.
-- Generation and normal brush interaction meet the initial performance budget on a baseline laptop.
+- On a 4-core laptop with 8 GB RAM, an integrated GPU, and Chromium, the 95th percentile from the Generate action to a usable rendered 2048×1024 map is at most 3 seconds, and completed brush actions become visible within 50 ms at the 95th percentile. Record CPU, GPU, operating system, Chromium version, seed, and measurement runs with results.
 
 ## Phase 2: Canvas artwork and editor behavior
 
@@ -70,7 +70,9 @@ See the [dated Phase 0 checklist](agents/phase-0-progress.md) for verified local
 
 ### Deliverables
 
-- Strapi Users & Permissions Google provider.
+- Strapi Users & Permissions Google provider; disable email/password Creator sign-in.
+- Firebase Hosting `/api/**` rewrite to Cloud Run for same-origin browser API calls; keep the Google OAuth backend callback URL explicit.
+- Strapi refresh-mode session with an HttpOnly `__session` cookie and secure production cookie settings.
 - Creator profile creation and editing.
 - Map list/create/rename/delete flows.
 - Task-oriented private routes with centralized ownership policy.
@@ -82,6 +84,7 @@ See the [dated Phase 0 checklist](agents/phase-0-progress.md) for verified local
 ### Exit checks
 
 - An authenticated Creator cannot access another Creator's Draft or signed URLs.
+- Browser tests prove Google sign-in and refresh through Firebase Hosting, including forwarding of the `__session` cookie.
 - Refresh restores the latest committed Draft.
 - Injected upload failures never commit manifests referencing missing objects.
 - Two-tab tests prove stale saves return conflict instead of overwriting.
@@ -137,8 +140,8 @@ See the [dated Phase 0 checklist](agents/phase-0-progress.md) for verified local
 
 ### Exit checks
 
-- Moderated/suspended content disappears from all public resolution and search paths.
-- Deletion makes content inaccessible before background cleanup begins.
+- Moderated, suspended, and deleted maps disappear immediately from public map routes, discovery, and search. Direct immutable asset URLs may remain readable until asynchronous cleanup and cache expiry.
+- Deletion removes map-route access before background cleanup begins.
 - Cleanup retries safely and leaves an auditable operational result.
 - End-to-end Creator and Explorer acceptance journeys pass in staging.
 - Production launch checklist and rollback procedure are complete.
@@ -152,7 +155,7 @@ See the [dated Phase 0 checklist](agents/phase-0-progress.md) for verified local
 | Partial publication | Failure injection, immutable keys, transactional pointer switch |
 | Draft leakage | Authorization and public-query leakage tests |
 | Cross-map relations | Database constraints/service validation tests |
-| Public moderation | Resolution, discovery, cache, and search removal tests |
+| Public moderation | Immediate map-route, discovery, and search removal tests; document direct-asset cleanup and cache limits |
 | Cost growth | Object count/storage metrics, cleanup metrics, provider budget alerts |
 | Browser performance | Deterministic performance scene, texture memory, brush latency, initial load |
 

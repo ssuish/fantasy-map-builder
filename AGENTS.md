@@ -39,6 +39,7 @@ Single-context layout. See `docs/agents/domain.md`.
 - For PixiJS work in `atlas/`, start with `atlas/.agents/skills/pixijs/SKILL.md`; it routes to the relevant PixiJS skill. Use only the skills relevant to the task.
 - For Strapi work in `atlas-cms/`, use `atlas-cms/.agents/skills/strapi-docs-mcp/SKILL.md` and current Strapi documentation.
 - For Google Cloud Run or `gcloud` work, use the matching skill under `.agents/skills/` (notably `cloud-run-basics` and `gcloud`). Use other Google Cloud architecture, alerting, or Well-Architected skills only when the task calls for them.
+- For Neon work, use `.agents/skills/neon/SKILL.md` and `neon status` to confirm target before mutation. The Neon `staging` branch exists, but this workspace links `production`; target `staging` explicitly for staging work and avoid pulling credentials into local env files unless requested.
 - `skills-lock.json` in each app records installed skill sources. Do not treat it as an application dependency lockfile.
 - Installed skills and `.codex/` are local-only. When absent, use current official documentation and the tracked setup instructions.
 
@@ -53,20 +54,22 @@ Single-context layout. See `docs/agents/domain.md`.
 
 ## Agent workflow
 
-- Use the primary GPT-6 Sol agent for planning, architecture, ambiguity
-  resolution, integration decisions, and final synthesis.
+- Keep planning, architecture, product decisions, integration decisions, and
+  final synthesis with the primary agent. Use its selected default model and
+  reasoning settings.
 - Delegate clear, bounded, independently verifiable implementation, research,
   test, script, and batch tasks to `luna_worker` when delegation saves primary
   agent work or supervision.
+- Use `ambiguous_implementer` for bounded feature work with substantial
+  technical ambiguity that requires deeper exploration and verification. The
+  primary agent resolves product and architecture decisions.
 - Use one Luna worker by default. Use two only when the assignments are genuinely
   independent; do not create parallel workers for overlapping exploration or
   implementation.
-- Use medium reasoning or higher for every Luna implementation task. Use high
-  reasoning for security-sensitive code, persistence and publication workflows,
-  concurrency, cross-service integration, or performance-critical map-engine
-  work. Low reasoning is permitted only for mechanical read-only lookup, simple
-  script supervision, or repetitive batch work with no design or code changes.
-  Luna workers must not spawn additional agents.
+- Use GPT-5.6 Luna with high reasoning by default for delegated tasks, including
+  feature implementation. Use max reasoning for most ambiguous implementations.
+  Lower effort only for mechanical read-only lookup or repetitive work without
+  design or code changes. Workers must not spawn additional agents.
 - Give each worker a concise brief containing its objective, working directory,
   relevant files and context, authorized actions, owned files when editing, and
   completion checks. Prefer `fork_turns="none"` when the brief is sufficient.
@@ -75,7 +78,3 @@ Single-context layout. See `docs/agents/domain.md`.
   blocker or decision.
 - Keep final integration and user-facing conclusions with the primary agent.
   Reconcile worker output against current repository state before accepting it.
-- Low reasoning is the primary-agent default. For architecture, broad planning,
-  difficult debugging, or security-sensitive work, select medium intelligence in
-  the Codex UI or launch Codex with
-  `-c 'model_reasoning_effort="medium"'`.

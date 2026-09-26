@@ -121,9 +121,10 @@ Canonical domain language lives in [`../CONTEXT.md`](../CONTEXT.md).
 
 - A Report action opens an external Google Form.
 - The sole Administrator reviews reports manually in Strapi.
-- The Administrator can unlist or unpublish maps and suspend Creators.
+- The Administrator can unlist or unpublish maps and suspend Creators. Administrator-unlisted Maps remain available by direct URL but leave discovery, search, and Creator profiles.
 - Automated text or image moderation is outside MVP.
-- Deleting a map requires typed-name confirmation, removes public access immediately, and permanently removes database and R2 data asynchronously.
+- Unpublishing, suspension, and deletion immediately remove affected maps from public map routes, discovery, and search.
+- Deleting a map requires typed-name confirmation and permanently removes database and R2 data asynchronously. Existing direct URLs to immutable public assets may remain readable until cleanup and cache expiry; the immediate access rule applies to map routes, discovery, and search.
 - Deleting a Creator account applies the same process to every owned map.
 - MVP has no recycle bin or recovery.
 
@@ -156,6 +157,7 @@ Canonical domain language lives in [`../CONTEXT.md`](../CONTEXT.md).
 - Failed publication never exposes a partial release.
 - Public and Unlisted visibility behave as defined.
 - Anonymous Explorers can load and navigate a Published Version without Strapi credentials.
-- Search never returns Draft or Unlisted content.
+- Global discovery and search never return Draft or Unlisted content; within-map search works on any accessible Published Version.
+- Unpublishing, suspension, and deletion immediately stop public map resolution and remove affected results from discovery and search.
 - Regeneration and permanent deletion require explicit confirmation and honor their documented deletion scope.
 
