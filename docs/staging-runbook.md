@@ -4,7 +4,7 @@
 
 Ship a quick read-only prototype: Firebase Hosting serves the Atlas SPA, Cloud Run serves Strapi health, and a public immutable map loads from R2. Authentication, Draft storage, publication, and production hardening remain later work.
 
-Firebase project `atlas-project-509605` is the staging project. Firebase CLI lists its default Hosting site at `https://atlas-project-509605.web.app`; the user confirms Blaze billing. Firebase initialization also generated Firestore and Functions files, but Phase 0 deploys only Hosting. Production will use a separate Firebase project. No cloud deployment has been verified.
+Firebase project `atlas-project-509605` is the staging project. Firebase CLI lists its default Hosting site at `https://atlas-project-509605.web.app`; the user confirms Blaze billing. Firebase initialization also generated Firestore and Functions files, but Phase 0 deploys only Hosting. Production will use a separate Firebase project. Firebase Hosting now serves a bundled read-only demo map at `https://atlas-project-509605.web.app` from commit `38c2f06`; remote HTML, manifest, art, and Chromium canvas checks passed. The R2-backed release and Cloud Run deployment remain pending.
 
 The Neon project `spring-meadow-23046405` is in AWS `ap-southeast-1`. Its `staging` branch and dedicated `db_stage_rwx` role exist, but local Neon context points to `production`; the CMS is not connected to staging. No Google Secret Manager secret exists yet; automatic approval review rejected transfer of the Neon connection URL to that destination pending explicit authorization. Firebase and target Cloud Run region use Google Cloud `asia-southeast1` (Singapore).
 

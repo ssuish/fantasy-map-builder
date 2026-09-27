@@ -26,10 +26,11 @@ Last reviewed: 2026-09-27. Check completed items against the current Git state b
 - [x] Firebase CLI confirms staging project `atlas-project-509605` and default Hosting site; user confirms Blaze plan. Production gets a separate project.
 - [x] R2 buckets `atlas-draft-private` and `atlas-published-public` exist. User reports `atlas-published-public` now has public URL `https://pub-ba3ece4cf7ad4e828c1b86747124f613.r2.dev`. Object access and CORS have not been verified. Keep private bucket non-public.
 - [ ] Build Atlas with a public R2 manifest URL, deploy `atlas/dist` through Firebase Hosting, and configure exact R2 CORS if browser reads need it. Reserve custom R2 domain and full budget/credential hardening for production; triage high dependency findings before public CMS exposure.
-- [x] Firebase CLI confirms the default Hosting site `https://atlas-project-509605.web.app`; generated GitHub workflows target the `stage` branch and build with Node 24.
+- [x] Firebase Hosting deployed the bundled read-only demo from commit `38c2f06` to `https://atlas-project-509605.web.app`. Remote HTML, local fixture manifest, and SVG returned HTTP 200; Chromium rendered a canvas at desktop and mobile widths without console errors. Generated workflows target the `stage` branch and build with Node 24.
 - [x] Slim CMS Docker image built locally, loaded patched `sharp` and `nodemailer`, and returned HTTP 200 at `GET /api/health` against local PostgreSQL. Local Docker containers stopped; volumes preserved.
 - [x] Cloudflare confirms the published bucket's `r2.dev` access is enabled and the private bucket's access is disabled. The connected API rejected a CORS write.
 - [ ] Upload the prepared immutable demo asset and manifest, set public-bucket CORS in Cloudflare console, and verify browser reads.
-- [ ] Deploy SPA to staging Firebase Hosting and CMS Docker image to staging Cloud Run; verify `run.app` health and separate Neon `staging` connection. Google Secret Manager currently has no secrets; approval review rejected transferring the pooled Neon URL without explicit authorization.
+- [x] Public Docker Hub image `adreanq/map-builder-cms:38c2f06` published and read back at digest `sha256:8b06a5132755f2b4520e6e06b3a89113ede5c8bc5c71fc72add97cbf0803d56e`.
+- [ ] Deploy CMS image to staging Cloud Run; verify `run.app` health and separate Neon `staging` connection. Google Secret Manager currently has no secrets; approval review rejected transferring the pooled Neon URL without explicit authorization.
 
 Phase 0 prototype remains open until cloud staging checks pass. Local S3-compatible storage cannot establish R2 behavior. Resource creation alone does not prove deployment, database connectivity, or browser access. Production hardening stays in Phase 6.
