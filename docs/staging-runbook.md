@@ -8,7 +8,7 @@ Firebase project `atlas-project-509605` is the staging project. Firebase CLI lis
 
 The Neon project `spring-meadow-23046405` is in AWS `ap-southeast-1`. CMS connects to branch `staging` (`br-shy-base-b3p0oqzf`) as `db_stage_rwx`; `public.strapi_migrations` exists after deployment. The role has `USAGE` and `CREATE` on schema `public`, granted only on the staging branch. Local Neon context previously pointed to `production`, so always target `staging` explicitly for future mutations. Firebase and Cloud Run use Google Cloud `asia-southeast1` (Singapore).
 
-R2 buckets `atlas-draft-private` and `atlas-published-public` exist. The published bucket serves the verified manifest at `https://pub-ba3ece4cf7ad4e828c1b86747124f613.r2.dev/phase-0/eldoria/v1/eldoria-manifest.json` and artwork at `phase-0/eldoria/v1/world-map.svg`. Both return the expected content types and staging Hosting CORS headers. The private bucket has public `r2.dev` access disabled. `r2.dev` is rate-limited and lacks custom-domain caching and controls; reserve `kofeejan.com` subdomains for production.
+R2 buckets `atlas-draft-private` and `atlas-published-public` exist. The published bucket serves the verified manifest at `https://pub-ba3ece4cf7ad4e828c1b86747124f613.r2.dev/phase-0/eldoria/v1/eldoria-manifest.json` and artwork at `phase-0/eldoria/v1/world-map.svg`. Both return the expected content types and staging Hosting CORS headers. The private bucket has public `r2.dev` access disabled and no custom domains; anonymous GET of known object `test-favicon.ico` returned HTTP 401 from the disabled managed hostname. `r2.dev` is rate-limited and lacks custom-domain caching and controls; reserve `kofeejan.com` subdomains for production.
 
 ## Prototype setup, in order
 
@@ -27,7 +27,7 @@ Cloud Run uses the dedicated identity `map-builder-cms-staging@atlas-project-509
 
 - CI passes on the deployed commit. Browser loads the Firebase Hosting SPA and immutable map manifest/art through `r2.dev`; verify status, content type, and CORS response headers if needed.
 - Cloud Run `GET /api/health` succeeds at `run.app`. Separately verify Strapi starts against Neon `staging`; health only proves HTTP availability.
-- Anonymous GET to a known private R2 object fails before Draft work begins. Verify presigned PUT/GET, CORS, ETags, and content types before browser uploads. Local MinIO behavior is not R2 evidence.
+- Anonymous GET to private `test-favicon.ico` returned HTTP 401 through the disabled managed `r2.dev` hostname. Verify presigned PUT/GET, CORS, ETags, and content types before browser uploads. Local MinIO behavior is not R2 evidence.
 
 ## Later production setup
 

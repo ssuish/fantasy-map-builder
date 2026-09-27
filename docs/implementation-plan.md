@@ -21,7 +21,7 @@ The root npm workspace has one lockfile. Add `domain`, `map-engine`, and `test-s
 
 ### Progress checklist
 
-See the [dated Phase 0 checklist](agents/phase-0-progress.md) for local, cloud, and CI evidence and the remaining pre-Draft check.
+See the [dated Phase 0 checklist](agents/phase-0-progress.md) for local, cloud, CI, and private R2 denial evidence.
 
 ### Exit checks
 
