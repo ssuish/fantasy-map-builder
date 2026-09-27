@@ -1,6 +1,6 @@
 # Phase 0 progress
 
-Last reviewed: 2026-09-27. Check completed items against the current Git state before reusing their evidence. The 2026-09-24 `build-logs/phase-zero-initialization/STATUS.md` receipt is historical and does not match current inputs. Use the ignored `build-logs/align-mvp-plan-and-issues/STATUS.md` receipt only while its Git HEAD and working-tree fingerprint match.
+Last reviewed: 2026-09-28. Check completed items against the current Git state before reusing their evidence. The latest local `build-logs/phase-zero-r2-cloud-run/STATUS.md` receipt passed lint, typecheck, tests, and builds; reuse it only while its Git HEAD and working-tree fingerprint match. Earlier receipts are historical.
 
 ## Local foundation
 
@@ -24,13 +24,13 @@ Last reviewed: 2026-09-27. Check completed items against the current Git state b
 - [x] Atlas Neon project `spring-meadow-23046405` linked to `production`; empty `neon.ts` policy deployed with no remote changes and no local env pull.
 - [x] Neon `staging` branch exists under `production`; the local Neon context still points to `production`.
 - [x] Firebase CLI confirms staging project `atlas-project-509605` and default Hosting site; user confirms Blaze plan. Production gets a separate project.
-- [x] R2 buckets `atlas-draft-private` and `atlas-published-public` exist. User reports `atlas-published-public` now has public URL `https://pub-ba3ece4cf7ad4e828c1b86747124f613.r2.dev`. Object access and CORS have not been verified. Keep private bucket non-public.
-- [ ] Build Atlas with a public R2 manifest URL, deploy `atlas/dist` through Firebase Hosting, and configure exact R2 CORS if browser reads need it. Reserve custom R2 domain and full budget/credential hardening for production; triage high dependency findings before public CMS exposure.
-- [x] Firebase Hosting deployed the bundled read-only demo from commit `38c2f06` to `https://atlas-project-509605.web.app`. Remote HTML, local fixture manifest, and SVG returned HTTP 200; Chromium rendered a canvas at desktop and mobile widths without console errors. Generated workflows target the `stage` branch and build with Node 24.
+- [x] R2 buckets `atlas-draft-private` and `atlas-published-public` exist. User reports `atlas-published-public` now has public URL `https://pub-ba3ece4cf7ad4e828c1b86747124f613.r2.dev`. Manifest and SVG reads, expected content types, and staging Hosting CORS have been verified. The private bucket remains non-public.
+- [x] Built Atlas with the verified public R2 manifest URL and deployed `atlas/dist` through Firebase Hosting. Live browser loads the R2 manifest and SVG with staging CORS. Reserve the custom R2 domain and full budget/credential hardening for production.
+- [x] Firebase Hosting deployed the R2-backed read-only demo to `https://atlas-project-509605.web.app` (Hosting version `8db9b1e6cd0365fe`). Remote manifest and SVG returned HTTP 200 with expected MIME and CORS headers; Chromium rendered a canvas at desktop and mobile widths without console or page errors. Generated workflows target the `stage` branch and build with Node 24.
 - [x] Slim CMS Docker image built locally, loaded patched `sharp` and `nodemailer`, and returned HTTP 200 at `GET /api/health` against local PostgreSQL. Local Docker containers stopped; volumes preserved.
 - [x] Cloudflare confirms the published bucket's `r2.dev` access is enabled and the private bucket's access is disabled. The connected API rejected a CORS write.
-- [ ] Upload the prepared immutable demo asset and manifest, set public-bucket CORS in Cloudflare console, and verify browser reads.
+- [x] The prepared immutable demo asset and manifest were uploaded to `atlas-published-public` at `phase-0/eldoria/v1/world-map.svg` and `phase-0/eldoria/v1/eldoria-manifest.json`. Remote bytes match local source. Staging CORS browser reads passed.
 - [x] Public Docker Hub image `adreanq/map-builder-cms:38c2f06` published and read back at digest `sha256:8b06a5132755f2b4520e6e06b3a89113ede5c8bc5c71fc72add97cbf0803d56e`.
-- [ ] Deploy CMS image to staging Cloud Run; verify `run.app` health and separate Neon `staging` connection. Google Secret Manager currently has no secrets; approval review rejected transferring the pooled Neon URL without explicit authorization.
+- [x] Cloud Run revision `map-builder-cms-staging-00003-z86` serves `GET /api/health` at `https://map-builder-cms-staging-zgyfospy5q-as.a.run.app/api/health` with HTTP 200. It uses the pinned public Docker Hub image and a dedicated identity with narrow Secret Manager access. Strapi migrations created `public.strapi_migrations` on Neon branch `staging`, separately proving database connectivity. The role received `USAGE` and `CREATE` on that branch's `public` schema. Runtime secrets remain only in Secret Manager.
 
-Phase 0 prototype remains open until cloud staging checks pass. Local S3-compatible storage cannot establish R2 behavior. Resource creation alone does not prove deployment, database connectivity, or browser access. Production hardening stays in Phase 6.
+Core Phase 0 prototype checks now pass in cloud staging. The private R2 bucket has public `r2.dev` access disabled but contains no known object for an anonymous-denial test; perform that test before Draft uploads. Local S3-compatible storage cannot establish R2 behavior. Resource creation alone does not prove deployment, database connectivity, or browser access. Production hardening stays in Phase 6.

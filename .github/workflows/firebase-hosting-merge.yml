@@ -18,7 +18,7 @@ jobs:
       - name: Build Atlas for staging
         run: npm ci && npm run build -w @atlas/contracts && npm run build -w atlas
         env:
-          VITE_PUBLIC_MAP_MANIFEST_URL: https://pub-ba3ece4cf7ad4e828c1b86747124f613.r2.dev/phase-0/eldoria/v1/manifest.json
+          VITE_PUBLIC_MAP_MANIFEST_URL: https://pub-ba3ece4cf7ad4e828c1b86747124f613.r2.dev/phase-0/eldoria/v1/eldoria-manifest.json
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
