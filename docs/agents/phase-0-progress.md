@@ -14,8 +14,8 @@ Last reviewed: 2026-09-28. Check completed items against the current Git state b
 - [x] Root `npm run verify -- --task phase-zero-initialization` passed lint, typecheck, tests, and both builds on 2026-09-24. This historical result does not validate the current working tree.
 - [x] Root `npm run verify -- --task align-mvp-plan-and-issues` passed lint, typecheck, tests, and both builds locally on 2026-09-27; it is not CI or staging evidence.
 - [x] Local PostgreSQL, object store, and CMS started. `GET /api/health` returned HTTP 200 with `{ "status": "ok" }`, PostgreSQL held 43 Strapi tables, and a temporary object-store write/readback passed; the smoke object and bucket were removed.
-- [x] [GitHub Actions CI run #36269556841](https://github.com/ssuish/fantasy-map-builder/actions/runs/36269556841) passed on pushed commit `e16fe66`, covering verification, the production-bundle browser smoke, and PostgreSQL/CMS container health on port 8080.
-- [x] Local audit triage in [issue #19](https://github.com/ssuish/fantasy-map-builder/issues/19) found reachable `sharp` and `nodemailer` advisories. Root overrides pin patched versions; clean `npm ci`, CMS image health, and runtime package load passed. One high Vite advisory remains in a development/build path. CI evidence is still pending.
+- [x] [GitHub Actions CI run #36327837034](https://github.com/ssuish/fantasy-map-builder/actions/runs/36327837034) passed on pushed source commit `02e5d47`, covering verification, the production-bundle browser smoke, and PostgreSQL/CMS container health on port 8080. The docs/workflow follow-up commit has a separate CI run.
+- [x] Local audit triage in [issue #19](https://github.com/ssuish/fantasy-map-builder/issues/19) found reachable `sharp` and `nodemailer` advisories. Root overrides pin patched versions; clean `npm ci`, CMS image health, and runtime package load passed. One high Vite advisory remains in a development/build path. CI passed on the deployed source commit; upload and email integration checks remain pending.
 - [x] GitHub issues were checked against the product spec and current repository layout; issue #1 tracks remaining Phase 0 gates.
 
 ## Cloud staging

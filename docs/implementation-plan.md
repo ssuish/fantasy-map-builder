@@ -21,7 +21,7 @@ The root npm workspace has one lockfile. Add `domain`, `map-engine`, and `test-s
 
 ### Progress checklist
 
-See the [dated Phase 0 checklist](agents/phase-0-progress.md) for verified local work and remaining gates. Local components and the Compose runtime smoke are implemented. Firebase Hosting serves the R2-backed demo; Cloud Run serves the CMS health route and Strapi migrations completed on Neon `staging`. CI passed on the deployed source commit. See the progress checklist for deployment evidence and remaining pre-Draft checks.
+See the [dated Phase 0 checklist](agents/phase-0-progress.md) for local, cloud, and CI evidence and the remaining pre-Draft check.
 
 ### Exit checks
 
