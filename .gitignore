@@ -13,3 +13,7 @@ coverage/
 playwright-report/
 test-results/
 .neon
+
+# Firebase CLI output
+firebase-debug.log
+firebase-debug.*.log

@@ -15,17 +15,21 @@ Last reviewed: 2026-09-27. Check completed items against the current Git state b
 - [x] Root `npm run verify -- --task align-mvp-plan-and-issues` passed lint, typecheck, tests, and both builds locally on 2026-09-27; it is not CI or staging evidence.
 - [x] Local PostgreSQL, object store, and CMS started. `GET /api/health` returned HTTP 200 with `{ "status": "ok" }`, PostgreSQL held 43 Strapi tables, and a temporary object-store write/readback passed; the smoke object and bucket were removed.
 - [x] [GitHub Actions CI run #36269556841](https://github.com/ssuish/fantasy-map-builder/actions/runs/36269556841) passed on pushed commit `e16fe66`, covering verification, the production-bundle browser smoke, and PostgreSQL/CMS container health on port 8080.
-- [ ] Triage the four high production-scope dependency audit entries in [issue #19](https://github.com/ssuish/fantasy-map-builder/issues/19) before staging; audit output alone does not establish runtime exposure.
+- [x] Local audit triage in [issue #19](https://github.com/ssuish/fantasy-map-builder/issues/19) found reachable `sharp` and `nodemailer` advisories. Root overrides pin patched versions; clean `npm ci`, CMS image health, and runtime package load passed. One high Vite advisory remains in a development/build path. CI evidence is still pending.
 - [x] GitHub issues were checked against the product spec and current repository layout; issue #1 tracks remaining Phase 0 gates.
 
 ## Cloud staging
 
-- [x] Firebase Hosting configuration, CMS Dockerfile, safe sample settings, and [staging runbook](../staging-runbook.md) prepared.
+- [x] Firebase Hosting configuration, CMS Dockerfile, safe sample settings, and [staging runbook](../staging-runbook.md) prepared. Hosting initialization added staging workflows.
 - [x] Atlas Neon project `spring-meadow-23046405` linked to `production`; empty `neon.ts` policy deployed with no remote changes and no local env pull.
 - [x] Neon `staging` branch exists under `production`; the local Neon context still points to `production`.
-- [x] User reports Google Cloud project `atlas-project` integrated with Firebase; confirm the exact project ID and Hosting site before deployment.
-- [x] R2 buckets `atlas-draft-private` and `atlas-published-public` exist. Both have `r2.dev` disabled, no custom domain, and no CORS policy.
-- [ ] Connect `atlas-assets-staging.kofeejan.com` to the published bucket, configure exact R2 CORS and least-privilege credentials, and establish Google Cloud, Neon, and R2 budget alerts.
-- [ ] Deploy SPA and CMS; verify healthy API backed by Neon, one immutable public map through R2, exact CORS, and anonymous denial for a known private object.
+- [x] Firebase CLI confirms staging project `atlas-project-509605` and default Hosting site; user confirms Blaze plan. Production gets a separate project.
+- [x] R2 buckets `atlas-draft-private` and `atlas-published-public` exist. User reports `atlas-published-public` now has public URL `https://pub-ba3ece4cf7ad4e828c1b86747124f613.r2.dev`. Object access and CORS have not been verified. Keep private bucket non-public.
+- [ ] Build Atlas with a public R2 manifest URL, deploy `atlas/dist` through Firebase Hosting, and configure exact R2 CORS if browser reads need it. Reserve custom R2 domain and full budget/credential hardening for production; triage high dependency findings before public CMS exposure.
+- [x] Firebase CLI confirms the default Hosting site `https://atlas-project-509605.web.app`; generated GitHub workflows target the `stage` branch and build with Node 24.
+- [x] Slim CMS Docker image built locally, loaded patched `sharp` and `nodemailer`, and returned HTTP 200 at `GET /api/health` against local PostgreSQL. Local Docker containers stopped; volumes preserved.
+- [x] Cloudflare confirms the published bucket's `r2.dev` access is enabled and the private bucket's access is disabled. The connected API rejected a CORS write.
+- [ ] Upload the prepared immutable demo asset and manifest, set public-bucket CORS in Cloudflare console, and verify browser reads.
+- [ ] Deploy SPA to staging Firebase Hosting and CMS Docker image to staging Cloud Run; verify `run.app` health and separate Neon `staging` connection. Google Secret Manager currently has no secrets; approval review rejected transferring the pooled Neon URL without explicit authorization.
 
-Phase 0 remains open until cloud staging checks pass. Local S3-compatible storage cannot establish R2 behavior. Resource creation alone does not prove deployment, database connectivity, browser access, or budget alerts.
+Phase 0 prototype remains open until cloud staging checks pass. Local S3-compatible storage cannot establish R2 behavior. Resource creation alone does not prove deployment, database connectivity, or browser access. Production hardening stays in Phase 6.

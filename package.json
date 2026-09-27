@@ -25,5 +25,9 @@
   "dependencies": {
     "@neon/config": "^1.7.3",
     "@neon/env": "^1.4.4"
+  },
+  "overrides": {
+    "sharp": "0.35.4",
+    "nodemailer": "9.1.0"
   }
 }

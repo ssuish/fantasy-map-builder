@@ -59,4 +59,4 @@ The CMS Dockerfile expects the repository root as its build context because it i
 docker compose build cms
 ```
 
-The image runs Strapi in production mode and honors the runtime `PORT`. An image build is local verification only; it does not deploy the service.
+The multi-stage image installs only production CMS dependencies at runtime, runs Strapi as the non-root `node` user, and honors runtime `PORT`. An image build is local verification only; it does not deploy the service.

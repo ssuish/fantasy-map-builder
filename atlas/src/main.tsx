@@ -8,7 +8,9 @@ import "./styles.css";
 
 extend({ Sprite });
 
-const manifestUrl = "/maps/eldoria/manifest.json";
+const manifestUrl =
+  import.meta.env.VITE_PUBLIC_MAP_MANIFEST_URL?.trim() ||
+  "/maps/eldoria/manifest.json";
 
 function App() {
   const [map, setMap] = useState<StaticMapManifest>();

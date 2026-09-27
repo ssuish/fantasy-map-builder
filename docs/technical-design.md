@@ -2,7 +2,7 @@
 
 ## Implementation status and repository boundaries
 
-The diagram and deep modules below describe the target MVP, not deployed infrastructure. Current Phase 0 code lives in the root npm workspace: `atlas/` (React, PixiJS, Vite), `atlas-cms/` (Strapi), and `packages/contracts/` (a versioned static-map manifest). `compose.yaml` runs local Strapi, PostgreSQL, and S3-compatible storage. The Neon `staging` branch exists as a child of `production`, but the CMS is not connected to it. Google Cloud project `atlas-project` is reported as integrated with Firebase. R2 buckets `atlas-draft-private` and `atlas-published-public` exist, but neither has CORS or a public route. Firebase Hosting and Cloud Run deployments have not been verified.
+The diagram and deep modules below describe the target MVP, not deployed infrastructure. Current Phase 0 code lives in the root npm workspace: `atlas/` (React, PixiJS, Vite), `atlas-cms/` (Strapi), and `packages/contracts/` (a versioned static-map manifest). `compose.yaml` runs local Strapi, PostgreSQL, and S3-compatible storage. The Neon `staging` branch exists as a child of `production`, but the CMS is not connected to it. Firebase CLI confirms staging project `atlas-project-509605` and its Hosting site; the user confirms Blaze billing. R2 buckets `atlas-draft-private` and `atlas-published-public` exist. The user reports a public `r2.dev` URL for the published bucket; object access and CORS are unverified. Firebase Hosting and Cloud Run deployments have not been verified.
 
 The Phase 0 static manifest is a walking-skeleton contract. It carries one image URL for a 2048×1024 map and is not the full Published Version manifest described later. The local fixture can change; staging uses an immutable release key. Future Terrain Engine, Canvas Document, Draft Persistence, and Publication modules remain unimplemented.
 
@@ -21,27 +21,27 @@ The browser renders DOM controls in React and map content through `@pixi/react` 
 
 ```mermaid
 flowchart LR
-    Browser[React + PixiJS SPA] -->|same-origin /api requests| Hosting[Firebase Hosting]
+    Browser[React + PixiJS SPA] -->|web app| Hosting[Firebase Hosting]
     Browser -->|Google OAuth redirect| Strapi[Strapi on Cloud Run]
-    Hosting -->|/api rewrite| Strapi
+    Hosting -->|future /api rewrite| Strapi
     Browser -->|presigned PUT/GET| PrivateR2[(Private R2 bucket)]
     Browser -->|presigned release uploads| PublicR2[(Public R2 bucket)]
     Strapi --> Neon[(Neon PostgreSQL)]
     Strapi -->|S3 API: sign, validate, finalize| PrivateR2
     Strapi -->|S3 API: finalize release| PublicR2
-    Explorer[Anonymous Explorer] -->|static SPA and public /api| Hosting
-    Explorer -->|immutable assets via custom domain| PublicR2
+    Explorer[Anonymous Explorer] -->|SPA| Hosting
+    Explorer -->|immutable assets: staging r2.dev; production custom domain| PublicR2
     Hosting --> Browser
 ```
 
 ### Deployment responsibilities
 
-- **Firebase Hosting** serves the static React SPA through its CDN and rewrites browser `/api/**` requests to Cloud Run.
+- **Firebase Hosting** serves the Vite SPA from `atlas/dist`. Phase 3 adds a `/api/**` rewrite to Cloud Run; Phase 0 deploys the static site only.
 - **Cloud Run** runs one stateless Strapi container and scales to zero for the low-traffic MVP.
 - **Neon PostgreSQL** stores identity, ownership, authoring content, metadata, search projections, and current Draft/Published pointers. Strapi uses Neon's pooled connection endpoint.
 - **Private Cloudflare R2 bucket** stores Draft terrain tiles, freehand tiles, temporary uploads, and immutable Draft manifests. It has no public domain.
-- **Public Cloudflare R2 bucket** stores immutable release packages and uses a custom domain with cache-friendly headers. Staging uses `atlas-assets-staging.kofeejan.com`; the `r2.dev` URL remains disabled.
-- **Google OAuth through Strapi Users & Permissions** is the sole Creator identity flow. The provider callback uses the configured absolute Cloud Run backend URL; authenticated browser API calls use the Firebase Hosting origin. Refresh mode uses a secure, HttpOnly `__session` cookie because Hosting forwards only that cookie name to Cloud Run.
+- **Public Cloudflare R2 bucket** stores immutable release packages. Staging uses the reported public `https://pub-ba3ece4cf7ad4e828c1b86747124f613.r2.dev` development URL. Production uses a custom asset subdomain under `kofeejan.com` for caching and controls.
+- **Google OAuth through Strapi Users & Permissions** is the sole Creator identity flow. The provider callback uses the configured absolute Cloud Run backend URL; authenticated browser API calls use the Firebase Hosting origin. Refresh mode uses a secure, HttpOnly `__session` cookie because Hosting forwards only that cookie name to Cloud Run. Browser sign-in and refresh need end-to-end tests.
 
 Place Cloud Run and Neon in the closest practical regions and measure cross-provider latency before production. Use an Asia-Pacific R2 location hint when it matches the initial audience, while treating the hint as placement guidance rather than an application guarantee.
 
@@ -240,7 +240,7 @@ Mutation requests use idempotency keys where retries could duplicate work. Destr
 - Keep R2 credentials, Strapi secrets, OAuth secret, and Neon connection strings only in Cloud Run secrets/configuration.
 - Issue short-lived presigned URLs for one exact key and operation.
 - Restrict upload content type and expected size; verify the uploaded object before committing references.
-- Configure R2 CORS for exact staging, production, and local-development origins. Test public GET through the custom domain separately from presigned PUT/GET through the R2 S3 API hostname; presigned URLs cannot use the custom domain. Allow only required methods and headers, and expose `ETag` where the browser verifies uploads.
+- Configure R2 CORS for exact staging, production, and local-development origins. Test public GET through staging `r2.dev` and production custom domain separately from presigned PUT/GET through the R2 S3 API hostname; presigned URLs cannot use either public hostname. Allow only required methods and headers, and expose `ETag` where the browser verifies uploads.
 - Sanitize Lore rich text server-side before inclusion in a release.
 - Enforce ownership in one policy/module on every private route.
 - Keep the private R2 bucket non-public and disable its development URL.
@@ -271,7 +271,7 @@ Mutation requests use idempotency keys where retries could duplicate work. Destr
 - **Canvas Document:** command, undo/redo, layer order, transform, hotspot, and canonical manifest tests through its interface.
 - **Draft Persistence:** in-memory object-store tests for upload failure, retry, stale revision, and manifest commit ordering.
 - **Publication:** failure injection at every step proves the old release remains public; concurrent publish and stale Draft cases are mandatory.
-- **Backend integration:** Strapi with PostgreSQL in CI, authorization matrices, Google callback adapter tests, browser sign-in and refresh through the Hosting `/api/**` rewrite with `__session`, deletion cleanup, and public-query leakage tests.
+- **Backend integration:** Strapi with PostgreSQL in CI, authorization matrices, Google callback adapter tests, browser sign-in and refresh through the Hosting `/api/**` rewrite and `__session` cookie, deletion cleanup, and public-query leakage tests.
 - **R2 adapter contract:** local S3-compatible tests plus a small staging smoke suite against R2 for presigning, CORS, ETags, and content types.
 - **Frontend:** React Testing Library for forms and accessible controls; Playwright for the primary Creator and Explorer journeys.
 - **Visual regression:** fixed generator seeds and editor commands produce stable map screenshots at representative zooms.

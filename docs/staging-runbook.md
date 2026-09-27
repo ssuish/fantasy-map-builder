@@ -1,43 +1,46 @@
 # Phase 0 staging runbook
 
-## Current state
+## Goal and current state
 
-Local Docker Compose starts PostgreSQL, the S3-compatible object store, and Strapi; its smoke checks do not establish cloud behavior. The Atlas Neon project `spring-meadow-23046405` has a `staging` child branch of `production`, while this workspace still links `production`. The CMS is not connected to Neon. The user reports Google Cloud project `atlas-project` is integrated with Firebase; confirm its project ID and Hosting site before deployment. Cloud Run and Firebase Hosting deployments have not been verified.
+Ship a quick read-only prototype: Firebase Hosting serves the Atlas SPA, Cloud Run serves Strapi health, and a public immutable map loads from R2. Authentication, Draft storage, publication, and production hardening remain later work.
 
-Cloudflare R2 buckets `atlas-draft-private` and `atlas-published-public` exist. Both have `r2.dev` disabled, no custom domain, and no CORS policy. Keep the private bucket without public access. The published bucket needs the selected custom domain `atlas-assets-staging.kofeejan.com` before the anonymous map check can pass. Do not treat the bucket's name as proof that it is publicly readable.
+Firebase project `atlas-project-509605` is the staging project. Firebase CLI lists its default Hosting site at `https://atlas-project-509605.web.app`; the user confirms Blaze billing. Firebase initialization also generated Firestore and Functions files, but Phase 0 deploys only Hosting. Production will use a separate Firebase project. No cloud deployment has been verified.
 
-## Remaining setup
+The Neon project `spring-meadow-23046405` is in AWS `ap-southeast-1`. Its `staging` branch and dedicated `db_stage_rwx` role exist, but local Neon context points to `production`; the CMS is not connected to staging. No Google Secret Manager secret exists yet; automatic approval review rejected transfer of the Neon connection URL to that destination pending explicit authorization. Firebase and target Cloud Run region use Google Cloud `asia-southeast1` (Singapore).
 
-1. Confirm `atlas-project` as the deployment target and identify the Firebase Hosting site. Prefer Cloud Run `asia-east1` for the initial Taiwan/APAC audience, then measure latency to Neon. Confirm billing, budgets, and alert recipients before deployment.
-2. Connect Cloud Run only to Neon's `staging` branch using a dedicated database role and pooled connection string. Store the connection string in Google Secret Manager; never put it in Git, build arguments, container images, or printed logs. Check `neon status` before any Neon mutation because the local context points to `production`.
-3. Connect `atlas-assets-staging.kofeejan.com` to `atlas-published-public` in the same Cloudflare account. Leave `r2.dev` disabled for both buckets. Configure exact browser origins and required methods/headers on each bucket: public GET through the custom domain, and browser presigned PUT/GET through the R2 S3 API hostname. Expose `ETag` only where the client needs it. Presigned URLs cannot use the custom domain. Use separate least-privilege application and administration credentials.
-4. Build the CMS container from the repository root using `atlas-cms/Dockerfile`. Deploy to Cloud Run with `HOST=0.0.0.0`, the platform's `PORT`, `DATABASE_CLIENT=postgres`, and runtime-injected secrets. Deploy `atlas/dist` through Firebase Hosting using `firebase.json`.
-5. Upload one immutable demo manifest and map asset to the public R2 release prefix. The SPA still hardcodes `/maps/eldoria/manifest.json` in `atlas/src/main.tsx`; make the staging build load the public manifest URL before deployment. Do not use private Draft assets as demo data.
+R2 buckets `atlas-draft-private` and `atlas-published-public` exist. The user reports public development URL `https://pub-ba3ece4cf7ad4e828c1b86747124f613.r2.dev` is enabled for the published bucket. Verify a known object; the URL alone does not prove object access. Keep the private bucket non-public. `r2.dev` is rate-limited and lacks custom-domain caching and controls; reserve `kofeejan.com` subdomains for production.
 
-Phase 3 will add a Firebase Hosting `/api/**` rewrite to Cloud Run for same-origin browser API calls. Google OAuth uses an explicit Strapi backend callback URL. Strapi refresh mode must use a secure, HttpOnly `__session` cookie because Firebase Hosting forwards only that cookie name to Cloud Run; browser sign-in and refresh require end-to-end checks.
+## Prototype setup, in order
 
-Before any `gcloud` command, follow the local `gcloud` skill's four checks:
+1. Build the root contracts workspace and `atlas/` Vite SPA. Set `VITE_PUBLIC_MAP_MANIFEST_URL` to an immutable public R2 manifest URL for the staging build. Without it, the app uses the bundled local map fixture. Firebase Hosting uploads `atlas/dist` and serves unknown SPA routes from `/index.html`.
+2. In the Cloudflare console, upload `atlas/public/maps/eldoria/world-map.svg` as `phase-0/eldoria/v1/world-map.svg`, then upload `docs/staging-assets/eldoria-manifest.json` as `phase-0/eldoria/v1/manifest.json` to `atlas-published-public`. Preserve MIME types `image/svg+xml` and `application/json`. Set the public bucket CORS rule to allow origins `https://atlas-project-509605.web.app`, `https://atlas-project-509605.firebaseapp.com`, and `http://localhost:8080`, methods `GET` and `HEAD`, allowed header `Accept`, exposed header `ETag`. The connected Cloudflare API can read bucket settings but rejected the CORS write; perform these changes in the console. Do not enable public access on `atlas-draft-private`. Public GET uses `r2.dev`; future browser uploads use R2 S3 API presigned URLs.
+3. Deploy only Firebase Hosting to project `atlas-project-509605`, or merge to the `stage` branch after its GitHub workflow passes. The generated workflow uses `FIREBASE_SERVICE_ACCOUNT_ATLAS_PROJECT_509605`; the secret name exists in GitHub. Do not deploy Firestore or Functions as part of Phase 0.
+4. Triage high dependency findings in issue #19 before exposing CMS publicly. Build the CMS image with repository root as context and `atlas-cms/Dockerfile` as Dockerfile. Use the public Docker Hub repository `adreanq/map-builder-cms` for the prototype image, then deploy that image to a staging service in `asia-southeast1`. The verified slim image is 1.84 GB unpacked and about 401 MB as a Docker archive; the unpacked size is not Artifact Registry billed storage. Docker Hub public images are supported by Cloud Run, but production should reassess registry availability and costs. Preserve `HOST=0.0.0.0` and Cloud Run's injected `PORT`; inject Strapi secrets at runtime, never during image build. Use its default `run.app` URL.
+5. Connect only the staging Cloud Run service to Neon's `staging` branch with a dedicated role and pooled connection string stored in Secret Manager. Check `neon status` and explicitly target `staging` before any Neon mutation. Verify database connectivity separately from `GET /api/health`.
+6. Record deployed commit, Hosting URL, Cloud Run URL, R2 manifest URL, and checks in issue #1. Keep credentials and raw logs out of the issue.
 
-1. **Step 1: Syntax Validation:** run `gcloud help <leaf_command>`.
-2. **Step 2: Parameter Verification:** confirm project, region, required flags, and whether dry-run or validate-only exists.
-3. **Step 3: Dry-Run Command Proposal:** run a supported dry-run or validate-only command first.
-4. **Step 4: Command Proposal & Authorization:** review the exact target; obtain authorization for denylisted operations before executing them.
+## Prototype checks
 
-## Required staging checks
+- CI passes on the deployed commit. Browser loads the Firebase Hosting SPA and immutable map manifest/art through `r2.dev`; verify status, content type, and CORS response headers if needed.
+- Cloud Run `GET /api/health` succeeds at `run.app`. Separately verify Strapi starts against Neon `staging`; health only proves HTTP availability.
+- Anonymous GET to a known private R2 object fails before Draft work begins. Verify presigned PUT/GET, CORS, ETags, and content types before browser uploads. Local MinIO behavior is not R2 evidence.
 
-- CI passes from a clean root `npm ci`, including frontend, CMS, contract, and container checks.
-- Firebase serves the SPA; the browser loads the immutable map manifest and art through `atlas-assets-staging.kofeejan.com` with expected cache and CORS headers. Confirm `r2.dev` stays disabled.
-- Cloud Run `GET /api/health` returns success. Verify the Neon `staging` connection separately; this health route reports HTTP availability, not ongoing database connectivity. Check structured logs without printing secrets.
-- A known private R2 object is readable with authorized credentials and denied to an anonymous request. Verify browser presigned URL operations, CORS, content types, and ETags against R2; local Compose is insufficient.
-- Budget alerts exist for Google Cloud, Neon, and R2; record owners and thresholds outside secret files. Record the deployed commit, URLs, and check results in GitHub issue #1.
+## Later production setup
+
+Use a separate production Firebase project, Cloud Run service, Neon target, and isolated secrets. Map chosen web, API, and public-assets subdomains under `kofeejan.com`. Attach the production asset hostname as an R2 custom domain, verify caching and public reads, then disable public `r2.dev` access when staging no longer needs it. If both environments share the published bucket, keep distinct immutable prefixes.
+
+Phase 3 adds a Firebase Hosting `/api/**` rewrite to Cloud Run and tests Google OAuth callback and refresh through the deployed origins. Hosting forwards only the `__session` cookie name to Cloud Run; verify secure HttpOnly cookie behavior in a browser. Phase 6 covers budgets, signed-upload checks, headers, backups, monitoring, and rollback.
+
+Before running `gcloud`, follow the local `gcloud` skill's syntax, target, dry-run, and authorization checks.
 
 ## References
 
-- [Cloud Run container contract](https://cloud.google.com/run/docs/container-contract)
+- [Firebase Hosting quickstart](https://firebase.google.com/docs/hosting/quickstart)
 - [Firebase Hosting rewrites](https://firebase.google.com/docs/hosting/full-config)
-- [Firebase Hosting cookie forwarding](https://firebase.google.com/docs/hosting/manage-cache)
-- [Strapi Users & Permissions sessions](https://docs.strapi.io/cms/features/users-permissions)
-- [Cloudflare R2 location hints](https://developers.cloudflare.com/r2/reference/data-location/)
-- [Cloudflare R2 public buckets](https://developers.cloudflare.com/r2/buckets/public-buckets/)
-- [Cloudflare R2 CORS](https://developers.cloudflare.com/r2/buckets/cors/)
-- [Cloudflare R2 presigned URLs](https://developers.cloudflare.com/r2/api/s3/presigned-urls/)
+- [Cloud Run deploy from an image](https://cloud.google.com/run/docs/deploying)
+- [Artifact Registry pricing](https://cloud.google.com/artifact-registry/pricing)
+- [Docker Hub usage limits](https://docs.docker.com/docker-hub/usage/)
+- [Cloud Run container contract](https://cloud.google.com/run/docs/container-contract)
+- [R2 public buckets and development URLs](https://developers.cloudflare.com/r2/buckets/public-buckets/)
+- [R2 CORS](https://developers.cloudflare.com/r2/buckets/cors/)
+- [R2 presigned URLs](https://developers.cloudflare.com/r2/api/s3/presigned-urls/)

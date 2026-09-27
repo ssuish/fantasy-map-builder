@@ -58,7 +58,7 @@ packages/
   contracts/           Shared static-map manifest contract
 docs/                  Product and engineering documentation
 compose.yaml           Local CMS, PostgreSQL, and object store
-firebase.json         Staging Hosting configuration
+firebase.json         Staging Firebase Hosting configuration
 ```
 
 The root uses npm workspaces and one `package-lock.json`. Other shared packages from the technical design will be added when their features begin.

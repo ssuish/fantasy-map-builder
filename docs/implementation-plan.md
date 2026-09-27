@@ -2,7 +2,7 @@
 
 ## Delivery strategy
 
-Build vertical slices that remain deployable. Prove map rendering, persistence, and publication risks before polishing the full editor. Every phase ends with observable behavior and automated checks.
+Build vertical slices that remain deployable. First ship a quick staging prototype: a read-only demo map, public R2 asset, and reachable CMS health route. Then build the editor and publication workflow. Defer production domains, operational hardening, and launch checks until those flows work. Every phase ends with observable behavior and automated checks.
 
 ## Current repository layout
 
@@ -21,13 +21,16 @@ The root npm workspace has one lockfile. Add `domain`, `map-engine`, and `test-s
 
 ### Progress checklist
 
-See the [dated Phase 0 checklist](agents/phase-0-progress.md) for verified local work and remaining gates. Local components and the Compose runtime smoke are implemented. The Neon staging branch and R2 buckets exist, and the reported Google Cloud project is integrated with Firebase; CI and cloud deployment checks remain open.
+See the [dated Phase 0 checklist](agents/phase-0-progress.md) for verified local work and remaining gates. Local components and the Compose runtime smoke are implemented. The Neon staging branch and R2 buckets exist, the published bucket has a reported public `r2.dev` URL, and the reported Google Cloud project is integrated with Firebase. CI passed on the recorded commit; cloud deployment checks remain open.
 
 ### Exit checks
 
 - CI builds and tests both applications and the shared contract from a clean root install.
 - Local Compose starts PostgreSQL, object store, and CMS; API health is available.
-- Staging serves the SPA, healthy API, and immutable public map while private R2 objects deny anonymous reads.
+- Firebase Hosting serves the built SPA from `atlas/dist`; the browser loads one immutable demo map from the published bucket's `r2.dev` URL.
+- A staging Cloud Run service runs the CMS Docker image and answers `GET /api/health` at its default `run.app` URL. Confirm the CMS uses the Neon `staging` branch separately; the health route does not prove database connectivity.
+
+Build with the public R2 manifest URL and deploy Hosting only; Firestore and Functions are not Phase 0 dependencies. Private R2 denial is required before Draft uploads, and signed-operation/CORS checks before browser uploads. Triage the high dependency findings in #19 before publicly exposing the CMS. Full budget alerting belongs before production launch.
 
 ## Phase 1: Terrain Engine and viewport
 
@@ -71,8 +74,8 @@ See the [dated Phase 0 checklist](agents/phase-0-progress.md) for verified local
 ### Deliverables
 
 - Strapi Users & Permissions Google provider; disable email/password Creator sign-in.
-- Firebase Hosting `/api/**` rewrite to Cloud Run for same-origin browser API calls; keep the Google OAuth backend callback URL explicit.
-- Strapi refresh-mode session with an HttpOnly `__session` cookie and secure production cookie settings.
+- Add a Firebase Hosting `/api/**` rewrite to Cloud Run for same-origin browser API calls; keep the Google OAuth backend callback URL explicit.
+- Strapi refresh-mode session with a secure, HttpOnly `__session` cookie configured for Hosting-to-Cloud Run forwarding.
 - Creator profile creation and editing.
 - Map list/create/rename/delete flows.
 - Task-oriented private routes with centralized ownership policy.
@@ -84,7 +87,7 @@ See the [dated Phase 0 checklist](agents/phase-0-progress.md) for verified local
 ### Exit checks
 
 - An authenticated Creator cannot access another Creator's Draft or signed URLs.
-- Browser tests prove Google sign-in and refresh through Firebase Hosting, including forwarding of the `__session` cookie.
+- Browser tests prove Google sign-in and refresh through Firebase Hosting and Cloud Run, including `__session` forwarding.
 - Refresh restores the latest committed Draft.
 - Injected upload failures never commit manifests referencing missing objects.
 - Two-tab tests prove stale saves return conflict instead of overwriting.
@@ -144,7 +147,7 @@ See the [dated Phase 0 checklist](agents/phase-0-progress.md) for verified local
 - Deletion removes map-route access before background cleanup begins.
 - Cleanup retries safely and leaves an auditable operational result.
 - End-to-end Creator and Explorer acceptance journeys pass in staging.
-- Production launch checklist and rollback procedure are complete.
+- Production Firebase Hosting, Cloud Run, and R2 subdomains under `kofeejan.com`, launch checklist, and rollback procedure are complete. Disable public `r2.dev` access after production asset routing is verified.
 
 ## Cross-cutting test matrix
 
