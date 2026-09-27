@@ -15,5 +15,6 @@ test-results/
 .neon
 
 # Firebase CLI output
+.firebase/
 firebase-debug.log
 firebase-debug.*.log
