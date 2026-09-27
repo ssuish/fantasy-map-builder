@@ -13,8 +13,8 @@ jobs:
     env:
       CMS_PORT: "8080"
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version-file: .nvmrc
           cache: npm
@@ -33,7 +33,7 @@ jobs:
           done
           docker compose logs cms postgres
           exit 1
-      - if: always()
+      - if: always() 
         run: docker compose down -v
       - if: always()
         uses: actions/upload-artifact@v4
