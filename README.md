@@ -1,8 +1,8 @@
 # Fantasy Map Builder
 
-Fantasy Map Builder is a planned web application for creating and publishing interactive 2D fantasy worlds. Creators can generate or paint terrain, add hand-drawn map features, connect locations to rich Lore, and publish the complete world at a shareable URL.
+Fantasy Map Builder is a web application for creating and publishing interactive 2D fantasy worlds. Creators can generate or paint terrain, add hand-drawn map features, connect locations to rich Lore, and publish the complete world at a shareable URL.
 
-The repository contains a local Phase 0 walking skeleton: a React/PixiJS web app, a Strapi service, and a shared static-map contract. The full editor and cloud staging are still planned work.
+Phase 0 staging prototype is live: a React/PixiJS read-only map on Firebase Hosting, public R2 assets, and a Strapi health service on Cloud Run connected to Neon staging. The full editor and publication journey remain planned work.
 
 ## MVP capabilities
 
@@ -46,7 +46,10 @@ The repository contains a local Phase 0 walking skeleton: a React/PixiJS web app
 - [Data model](docs/data-model.md)
 - [Implementation plan](docs/implementation-plan.md)
 - [Domain glossary](CONTEXT.md)
+- [Architecture overview](ARCHITECTURE.md)
+- [Design overview](DESIGN.md)
 - [Architecture decisions](docs/adr/)
+- [Local and staging runbooks](docs/runbooks/README.md)
 - [Local Codex setup](docs/agents/codex-setup.md)
 
 ## Repository

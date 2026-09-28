@@ -21,8 +21,10 @@ Possible repo-specific roles, if repeated work warrants separate agents:
 - `contract_worker`: Manifest schema and parser changes in `packages/contracts/`. Require compatibility checks across frontend and CMS consumers.
 - `integration_reviewer`: Read-only review of cross-workspace changes, runtime behavior, and missing tests before final integration.
 
+Before planning each next phase, use `/grill-with-docs` and domain modeling to compare current code, glossary, ADRs, roadmap, issue contracts, and build evidence. Resolve missing or conflicting requirements before declaring a phase ready. Root `AGENTS.md` owns the full rule.
+
 Prefer existing roles until these scopes recur often enough to justify separate instructions. Start a new Codex session after changing configuration and inspect its effective model and reasoning settings. See the [Codex subagents guide](https://learn.chatgpt.com/docs/agent-configuration/subagents), [configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference), and [GPT-5.6 Luna model page](https://developers.openai.com/api/docs/models/gpt-5.6-luna).
 
-Plans live locally under `docs/agents/plans/<slug>/PLAN.md`; verification receipts live under `docs/agents/build-logs/<slug>/STATUS.md`. Both directories are ignored by Git, so transfer a plan explicitly when another clone or worktree needs it. GitHub issues hold shared progress across environments.
+Plans live locally under `docs/agents/plans/<slug>/PLAN.md`. The ignored `docs/agents/build-logs/build-log.md` records observed phase progress; task receipts live under `docs/agents/build-logs/<slug>/STATUS.md`. These paths are not transferred by Git. GitHub issues hold shared progress across environments, and a local receipt is reusable only while HEAD and its working-tree fingerprint match.
 
 Neon MCP is installed in the ignored project `.codex/config.toml`, pinned to project `spring-meadow-23046405` with a project-scoped key. The Neon `staging` branch exists, but the ignored local `.neon` context points to `production`. Check `neon status` before any Neon mutation; do not copy the MCP credential or pull production connection strings into local env files without a task that needs them.

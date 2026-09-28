@@ -30,9 +30,11 @@ See the [dated Phase 0 checklist](agents/phase-0-progress.md) for local, cloud, 
 - Firebase Hosting serves the built SPA from `atlas/dist`; the browser loads one immutable demo map from the published bucket's `r2.dev` URL.
 - A staging Cloud Run service runs the CMS Docker image and answers `GET /api/health` at its default `run.app` URL. Confirm the CMS uses the Neon `staging` branch separately; the health route does not prove database connectivity.
 
-Build with the public R2 manifest URL and deploy Hosting only; Firestore and Functions are not Phase 0 dependencies. Private R2 denial is required before Draft uploads, and signed-operation/CORS checks before browser uploads. Triage the high dependency findings in #19 before publicly exposing the CMS. Full budget alerting belongs before production launch.
+Build with the public R2 manifest URL and deploy Hosting only; Firestore and Functions are not Phase 0 dependencies. Resolve dependency triage issue #19 before starting Phase 1. Private R2 denial is required before Draft uploads, and signed-operation/CORS checks before browser uploads. Triage the high dependency findings in #19 before publicly exposing the CMS. Full budget alerting belongs before production launch.
 
 ## Phase 1: Terrain Engine and viewport
+
+The [Phase 1 readiness interview](agents/phase-1-readiness.md) records resolved decisions and open benchmark setup. Issue #19 must close before implementation starts.
 
 ### Deliverables
 
@@ -43,12 +45,16 @@ Build with the public R2 manifest URL and deploy Hosting only; Firestore and Fun
 - Elevation, temperature, and moisture brushes.
 - Blank-map and generated-map creation in memory.
 
+Phase 1 and Phase 2 keep Map editing in browser memory. Sign-in and durable Draft persistence begin in Phase 3. The generator records an algorithm version and reproduces the same starting terrain across desktop Chromium and Firefox for the same version, seed, and settings ([ADR 0005](adr/0005-version-generated-terrain.md)).
+
 ### Exit checks
 
-- Golden seed tests are deterministic.
+- Golden seed tests are deterministic across desktop Chromium and Firefox for a given algorithm version.
 - Seam painting and rendering are continuous.
 - Brush updates recompute only dirty tiles.
 - On a 4-core laptop with 8 GB RAM, an integrated GPU, and Chromium, the 95th percentile from the Generate action to a usable rendered 2048×1024 map is at most 3 seconds, and completed brush actions become visible within 50 ms at the 95th percentile. Record CPU, GPU, operating system, Chromium version, seed, and measurement runs with results.
+
+The exact reference device or CI runner for these budgets remains undecided. Agree on it and the run count before Phase 1 performance acceptance; do not report the budget as passed on an unrecorded machine.
 
 ## Phase 2: Canvas artwork and editor behavior
 

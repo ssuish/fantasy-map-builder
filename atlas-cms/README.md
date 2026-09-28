@@ -1,6 +1,6 @@
 # Atlas CMS
 
-Atlas CMS is the Strapi 5 backend in the Fantasy Map Builder npm workspace. It provides the server foundation for map content and publishing workflows.
+Atlas CMS is the Strapi 5 backend in the Fantasy Map Builder npm workspace. It provides the server foundation for map content and publishing workflows. See the repository [architecture overview](../ARCHITECTURE.md) and [design overview](../DESIGN.md) for the planned system boundaries.
 
 ## Current status
 
@@ -10,7 +10,7 @@ The current Phase 0 service is a walking skeleton:
 - `GET /api/health` is public and returns `{ "status": "ok" }`.
 - The health route confirms the HTTP service is responding. It does not check database connectivity.
 - Product content types, map authoring APIs, authentication workflows, and object storage integration are future work.
-- Compose starts MinIO as a local object-store service, but Strapi is not yet configured to use it. Cloud Run deployment is planned, not completed.
+- Compose starts MinIO as a local object-store service, but Strapi is not yet configured to use it. Staging Cloud Run serves this CMS with Neon `staging`; Strapi migrations separately confirm database connectivity. See the [staging deployment runbook](../docs/runbooks/staging-deployment.md) for live resources and checks.
 
 ## Run locally
 

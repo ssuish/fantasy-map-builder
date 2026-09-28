@@ -34,6 +34,17 @@ Issues live in GitHub Issues; use `gh`. See `docs/agents/issue-tracker.md`.
 
 Single-context layout. See `docs/agents/domain.md`.
 
+### Phase planning interview
+
+Before planning or materially replanning the next implementation phase, invoke
+`/grill-with-docs` and the domain-modeling discipline. Compare the live code,
+`CONTEXT.md`, ADRs, product specification, roadmap, build evidence, and relevant
+GitHub issues. Identify missing, ambiguous, or contradictory requirements and
+ask the user to resolve decisions that cannot be inferred. Record resolved domain
+terms in `CONTEXT.md` and durable trade-offs in an ADR when warranted. Update
+phase scope and issue acceptance only after the decisions are clear; never treat
+an unanswered question as approval or a planned check as passing evidence.
+
 ### Framework and cloud skills
 
 - For PixiJS work in `atlas/`, start with `atlas/.agents/skills/pixijs/SKILL.md`; it routes to the relevant PixiJS skill. Use only the skills relevant to the task.
@@ -50,7 +61,8 @@ Single-context layout. See `docs/agents/domain.md`.
 
 ## Build evidence
 
-- Run `npm run verify -- --task <slug>` to write a concise, Git-ignored status under `docs/agents/build-logs/<slug>/STATUS.md`. Reuse a result only if Git HEAD and the working-tree fingerprint still match; otherwise rerun affected checks. Never put secrets or raw application logs in the status file.
+- `docs/agents/build-logs/build-log.md` is the Git-ignored local source of truth for observed phase progress. Before closing a phase, update its Phase 0–6 summary only from acceptance evidence and append a dated activity entry; preserve failed attempts and correct earlier entries by appending a correction. GitHub issues carry shared cross-clone status.
+- Run `npm run verify -- --task <slug> [--phase <0-6>]` to write a Git-ignored task receipt at `docs/agents/build-logs/<slug>/STATUS.md` and append task verification activity. The optional phase flag labels activity; passing checks do not complete a phase. Reuse a receipt only if Git HEAD and the working-tree fingerprint still match; otherwise rerun affected checks. Never put secrets, arbitrary caller text, or raw application logs in these files.
 
 ## Agent workflow
 

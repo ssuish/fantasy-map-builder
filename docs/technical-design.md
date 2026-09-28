@@ -2,11 +2,11 @@
 
 ## Implementation status and repository boundaries
 
-The diagram and deep modules below describe the target MVP, not deployed infrastructure. Current Phase 0 code lives in the root npm workspace: `atlas/` (React, PixiJS, Vite), `atlas-cms/` (Strapi), and `packages/contracts/` (a versioned static-map manifest). `compose.yaml` runs local Strapi, PostgreSQL, and S3-compatible storage. The Neon `staging` branch exists as a child of `production`, but the CMS is not connected to it. Firebase CLI confirms staging project `atlas-project-509605` and its Hosting site; the user confirms Blaze billing. R2 buckets `atlas-draft-private` and `atlas-published-public` exist. The user reports a public `r2.dev` URL for the published bucket; object access and CORS are unverified. Firebase Hosting and Cloud Run deployments have not been verified.
+The diagram and deep modules below describe the target MVP. [ARCHITECTURE.md](../ARCHITECTURE.md) separates the deployed Phase 0 system from this planned design, and the [Phase 0 progress checklist](agents/phase-0-progress.md) records verification evidence. Today, `atlas/` renders one static map from public R2 through Firebase Hosting, `atlas-cms/` runs Strapi health on Cloud Run with Neon `staging`, and `packages/contracts/` validates the static manifest. `compose.yaml` runs local Strapi, PostgreSQL, and S3-compatible storage. Editor, identity, Draft, Lore, publication, discovery, and moderation modules below are not implemented.
 
 The Phase 0 static manifest is a walking-skeleton contract. It carries one image URL for a 2048×1024 map and is not the full Published Version manifest described later. The local fixture can change; staging uses an immutable release key. Future Terrain Engine, Canvas Document, Draft Persistence, and Publication modules remain unimplemented.
 
-The browser renders DOM controls in React and map content through `@pixi/react` v8. The backend exposes a minimal unauthenticated health route. Local object storage validates development wiring only; staging must verify R2's presigned URL, CORS, and metadata behavior separately.
+The browser renders DOM controls in React and map content through `@pixi/react` v8. The backend exposes a minimal unauthenticated health route. Public R2 manifest/art reads and staging CORS are verified; presigned PUT/GET, upload ETags, and metadata behavior remain future integration checks. Local object storage validates development wiring only.
 
 ## Design goals
 
@@ -59,7 +59,7 @@ PixiJS should use its production-recommended WebGL renderer. Terrain buffers bec
 
 Interface responsibilities:
 
-- Create deterministic source fields from a seed and generator settings.
+- Create deterministic source fields from an algorithm version, seed, and generator settings across desktop Chromium and Firefox for that version.
 - Apply a terrain brush command.
 - Derive biome, land/water, coastline, hill-shading, water tint, and contours for dirty tiles.
 - Apply horizontal wrapping and vertical clamping consistently.
@@ -181,7 +181,7 @@ The complete uncompressed source fields require about 8 MiB per map. Incremental
 The immutable JSON manifest contains:
 
 - schema version and map dimensions;
-- generator metadata for reproducibility;
+- generator algorithm version, seed, and settings for reproducibility;
 - sea level and rendering defaults;
 - terrain tile keys and checksums;
 - freehand tile keys and checksums;
@@ -267,7 +267,7 @@ Mutation requests use idempotency keys where retries could duplicate work. Destr
 
 ## Testing strategy
 
-- **Terrain Engine:** deterministic golden seeds, wrap-seam continuity, vertical clamping, biome classification, contour extraction, and dirty-tile tests.
+- **Terrain Engine:** versioned deterministic golden seeds across desktop Chromium and Firefox, wrap-seam continuity, vertical clamping, biome classification, contour extraction, and dirty-tile tests.
 - **Canvas Document:** command, undo/redo, layer order, transform, hotspot, and canonical manifest tests through its interface.
 - **Draft Persistence:** in-memory object-store tests for upload failure, retry, stale revision, and manifest commit ordering.
 - **Publication:** failure injection at every step proves the old release remains public; concurrent publish and stale Draft cases are mandatory.
@@ -275,7 +275,7 @@ Mutation requests use idempotency keys where retries could duplicate work. Destr
 - **R2 adapter contract:** local S3-compatible tests plus a small staging smoke suite against R2 for presigning, CORS, ETags, and content types.
 - **Frontend:** React Testing Library for forms and accessible controls; Playwright for the primary Creator and Explorer journeys.
 - **Visual regression:** fixed generator seeds and editor commands produce stable map screenshots at representative zooms.
-- **Performance budgets:** on a 4-core, 8 GB RAM laptop with an integrated GPU and Chromium, generation reaches a usable rendered 2048×1024 map within 3 seconds at the 95th percentile and completed brush actions render within 50 ms at the 95th percentile. Record device, browser, seed, and runs; measure publish and initial Explorer load separately in CI or staging.
+- **Performance budgets:** on a 4-core, 8 GB RAM laptop with an integrated GPU and Chromium, generation reaches a usable rendered 2048×1024 map within 3 seconds at the 95th percentile and completed brush actions render within 50 ms at the 95th percentile. Record device, browser, seed, and runs; the exact reference device or CI runner and run count remain undecided before Phase 1 acceptance. Measure publish and initial Explorer load separately in CI or staging.
 
 ## External references
 

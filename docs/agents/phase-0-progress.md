@@ -1,6 +1,6 @@
 # Phase 0 progress
 
-Last reviewed: 2026-09-28. Check completed items against the current Git state before reusing their evidence. The latest local `build-logs/phase-zero-r2-cloud-run/STATUS.md` receipt passed lint, typecheck, tests, and builds; reuse it only while its Git HEAD and working-tree fingerprint match. Earlier receipts are historical.
+Last reviewed: 2026-09-28. Check completed items against the current Git state before reusing their evidence. The ignored `build-logs/build-log.md` records local phase evidence; task receipts are historical unless their Git HEAD and working-tree fingerprint match the current state. The `build-logs/phase-zero-r2-cloud-run/STATUS.md` receipt passed lint, typecheck, tests, and builds at its recorded commit.
 
 ## Local foundation
 
@@ -20,7 +20,7 @@ Last reviewed: 2026-09-28. Check completed items against the current Git state b
 
 ## Cloud staging
 
-- [x] Firebase Hosting configuration, CMS Dockerfile, safe sample settings, and [staging runbook](../staging-runbook.md) prepared. Hosting initialization added staging workflows.
+- [x] Firebase Hosting configuration, CMS Dockerfile, safe sample settings, and [staging deployment runbook](../runbooks/staging-deployment.md) prepared. Hosting initialization added staging workflows.
 - [x] Atlas Neon project `spring-meadow-23046405` linked to `production`; empty `neon.ts` policy deployed with no remote changes and no local env pull.
 - [x] Neon `staging` branch exists under `production`; the local Neon context still points to `production`.
 - [x] Firebase CLI confirms staging project `atlas-project-509605` and default Hosting site; user confirms Blaze plan. Production gets a separate project.
