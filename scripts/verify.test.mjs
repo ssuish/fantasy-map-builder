@@ -74,12 +74,12 @@ test("failed first check records skipped checks and failed task evidence", (t) =
   const result = runVerifier(fixture, ["--task", "failed-first"], { STUB_FAIL_CHECK: "lint" });
   assert.equal(result.status, 1, result.stderr);
   assert.match(receipt(fixture, "failed-first"), /Result: failed/);
-  assert.match(receipt(fixture, "failed-first"), /npm run lint.*\\| 7 \\|/);
+  assert.match(receipt(fixture, "failed-first"), /npm run lint.*\| 7 \|/);
   assert.match(receipt(fixture, "failed-first"), /Skipped after the first failure:.*typecheck.*test.*build/);
   assert.equal(calls(fixture), "lint\n");
   assert.match(log(fixture), /Task failed-first: verification run/);
   assert.match(log(fixture), /Task verification.*failed/);
-  assert.match(log(fixture), /\\| Phase 0 \\| Not started \\|/);
+  assert.match(log(fixture), /\| Phase 0 \| Not started \|/);
 });
 
 test("malformed canonical log fails before checks or receipt writes and preserves bytes", (t) => {
@@ -120,7 +120,7 @@ test("repeat runs append activity and untracked content changes fingerprint", (t
   assert.notEqual(thirdFingerprint, secondFingerprint);
   assert.equal((log(fixture).match(/Task repeat: verification run/g) ?? []).length, 3);
   assert.match(activityAfterSecond, /Task repeat: verification run/);
-  assert.match(log(fixture), /\\| Phase 1 \\| Not started \\|/);
+  assert.match(log(fixture), /\| Phase 1 \| Not started \|/);
 });
 
 test("private file contents and caller text stay out of evidence", (t) => {
@@ -146,4 +146,21 @@ test("private file contents and caller text stay out of evidence", (t) => {
   for (const secret of ["PRIVATE_SENTINEL_ONE", "PRIVATE_SENTINEL_TWO", "CREDENTIALS_SENTINEL_ONE", "PRIVATE_PROGRESS_SENTINEL", "PRIVATE_NEXT_SENTINEL"]) {
     assert.equal(evidence.includes(secret), false, "leaked " + secret);
   }
+});
+
+test("untracked filenames with whitespace and Unicode keep content-sensitive fingerprints", (t) => {
+  const fixture = createFixture();
+  t.after(fixture.cleanup);
+  const input = join(fixture.root, " leading\n世界.txt");
+  writeFileSync(input, "alpha");
+  const first = runVerifier(fixture, ["--task", "unusual-filename"]);
+  assert.equal(first.status, 0, first.stderr);
+  const firstFingerprint = fingerprintOf(receipt(fixture, "unusual-filename"));
+  assert.ok(firstFingerprint);
+  const before = statSync(input);
+  writeFileSync(input, "omega");
+  utimesSync(input, before.atime, before.mtime);
+  const second = runVerifier(fixture, ["--task", "unusual-filename"]);
+  assert.equal(second.status, 0, second.stderr);
+  assert.notEqual(fingerprintOf(receipt(fixture, "unusual-filename")), firstFingerprint);
 });

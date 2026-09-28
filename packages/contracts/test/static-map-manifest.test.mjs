@@ -18,3 +18,12 @@ test("accepts a static map manifest", () => {
 test("rejects a manifest with incompatible dimensions", () => {
   assert.throws(() => parseStaticMapManifest({ ...manifest, width: 1024 }), TypeError);
 });
+
+test("rejects a non-image map asset URL", () => {
+  assert.throws(() => parseStaticMapManifest({ ...manifest, imageUrl: "/maps/demo/manifest.json" }), TypeError);
+});
+
+test("accepts a supported image URL with a query string", () => {
+  const remote = { ...manifest, imageUrl: "https://example.com/maps/demo/map.webp?v=1" };
+  assert.deepEqual(parseStaticMapManifest(remote), remote);
+});
