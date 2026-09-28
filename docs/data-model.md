@@ -45,7 +45,7 @@ Email, provider tokens, provider subject, and Strapi role data remain on the pri
 | `createdAt` / `updatedAt` | timestamp | Operational |
 | `deletionStatus` | enum | `active`, `deleting` |
 
-Uniqueness: `(owner, slug)`. Public resolution uses `(creatorSlug, mapSlug)` and rejects suspended/deleted/unpublished states.
+Uniqueness: `(owner, slug)`. Direct public resolution uses `(creatorSlug, mapSlug)` and rejects suspended, deleted, and unpublished states. Administrator-unlisted Maps remain available by direct URL but are excluded from discovery, search, and Creator Profiles.
 
 ### PointOfInterest
 
@@ -126,7 +126,7 @@ Materialized only from active Public Maps during publication.
 | `searchVector` | PostgreSQL `tsvector` | GIN indexed |
 | `updatedAt` | timestamp | Ranking/display |
 
-Unlisted Maps have no global SearchDocument rows. Per-map Explorer search is included in the immutable public manifest and runs locally for MVP-scale content.
+Unlisted Maps, including those unlisted by an Administrator, have no global SearchDocument rows. Per-map Explorer search is included in the immutable public manifest and runs locally for MVP-scale content.
 
 ### CleanupJob
 
@@ -183,7 +183,7 @@ Release keys are immutable and receive long-lived cache headers. The manifest is
 - A release records exactly one source Draft revision.
 - A Public or Unlisted Map with no `publishedReleaseId` is not resolvable publicly.
 - A suspended Creator has no publicly resolvable maps regardless of map visibility.
-- Global search rows exist only for the currently active release of a Public Map.
+- Global search rows exist only for the currently active release of a Public Map with clear moderation status and an active Creator.
 - Public payloads never query mutable Draft content.
 - X coordinates normalize modulo 1; no duplicate seam entities exist.
 - Lore and Point of Interest relations never cross map ownership.

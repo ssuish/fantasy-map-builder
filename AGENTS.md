@@ -2,11 +2,11 @@
 
 ## Project Structure & Module Organization
 
-`atlas/` is the PixiJS 8 and Vite TypeScript frontend. `atlas-cms/` is the Strapi 5 TypeScript backend. Each app has its own `package.json` and `package-lock.json`; run npm commands from the app directory. Place tests beside their implementation or in an established test directory. Shared packages and a root workspace have not been created; confirm their layout before introducing one.
+The root npm workspace contains `atlas/` (React, PixiJS, and Vite), `atlas-cms/` (Strapi), and `packages/contracts/` (shared static-map contract). Use the root `package-lock.json` and run workspace commands from the repository root. App-specific instructions live in each app's `AGENTS.md`. Keep shared code in focused packages rather than duplicating contracts.
 
 ## Build, Test, and Development Commands
 
-Frontend: `cd atlas && npm run dev`, `npm run lint`, and `npm run build` (lint, TypeScript, Vite). Backend: `cd atlas-cms && npm run dev`, `npm run build`, and `npm run start`. No root build command or test script exists yet. Run relevant checks in the affected app and report checks that could not be run.
+Run `npm ci` at the root. Use `npm run dev:web` and `npm run dev:cms` for local apps; use `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`, and `npm run verify -- --task <slug>` for checks. `docker compose up --build` starts the local CMS, PostgreSQL, and object store. Run relevant checks before submitting changes and report checks that could not be run.
 
 ## Coding Style & Naming Conventions
 
@@ -14,7 +14,7 @@ Follow the formatter, linter, and language conventions adopted by the project wh
 
 ## Testing Guidelines
 
-Neither app has a test script or coverage policy yet. Add tests with the framework chosen for the affected app, name test files clearly (such as `*.test.ts`), and cover observable behavior and relevant edge cases. Include the exact test command in the pull request.
+Put tests beside their implementation or in the app's test directory. Cover observable behavior and relevant edge cases, including shared contracts and health routes. Run affected tests and include the exact command in the pull request.
 
 ## Commit & Pull Request Guidelines
 
@@ -22,7 +22,7 @@ Write concise, imperative commit subjects that describe the change. Pull request
 
 ## Configuration & Secrets
 
-`CREDENTIALS.md` and all `.env` variants except `.env.example` are private. Do not read, search, quote, copy, stage, or transmit their contents. Check file names or ignore status without opening them when needed. Keep these files out of version control; `.codexignore` is an agent context hint, not a substitute for Git ignore rules. Add only placeholder values to `.env.example` files and document required variables there.
+`CREDENTIALS.md` and all `.env` variants except `.env.example` are private. Do not read, search, quote, copy, stage, or transmit their contents. Check file names or ignore status without opening them when needed. Keep these files out of version control and Docker build contexts. Add only placeholder values to `.env.example` files and document required variables there.
 
 ## Agent skills
 
@@ -34,29 +34,54 @@ Issues live in GitHub Issues; use `gh`. See `docs/agents/issue-tracker.md`.
 
 Single-context layout. See `docs/agents/domain.md`.
 
+### Phase planning interview
+
+Before planning or materially replanning the next implementation phase, invoke
+`/grill-with-docs` and the domain-modeling discipline. Compare the live code,
+`CONTEXT.md`, ADRs, product specification, roadmap, build evidence, and relevant
+GitHub issues. Identify missing, ambiguous, or contradictory requirements and
+ask the user to resolve decisions that cannot be inferred. Record resolved domain
+terms in `CONTEXT.md` and durable trade-offs in an ADR when warranted. Update
+phase scope and issue acceptance only after the decisions are clear; never treat
+an unanswered question as approval or a planned check as passing evidence.
+
 ### Framework and cloud skills
 
 - For PixiJS work in `atlas/`, start with `atlas/.agents/skills/pixijs/SKILL.md`; it routes to the relevant PixiJS skill. Use only the skills relevant to the task.
 - For Strapi work in `atlas-cms/`, use `atlas-cms/.agents/skills/strapi-docs-mcp/SKILL.md` and current Strapi documentation.
 - For Google Cloud Run or `gcloud` work, use the matching skill under `.agents/skills/` (notably `cloud-run-basics` and `gcloud`). Use other Google Cloud architecture, alerting, or Well-Architected skills only when the task calls for them.
+- For Neon work, use `.agents/skills/neon/SKILL.md` and `neon status` to confirm target before mutation. The Neon `staging` branch exists, but this workspace links `production`; target `staging` explicitly for staging work and avoid pulling credentials into local env files unless requested.
 - `skills-lock.json` in each app records installed skill sources. Do not treat it as an application dependency lockfile.
+- Installed skills and `.codex/` are local-only. When absent, use current official documentation and the tracked setup instructions.
+
+## Plan files
+
+- When Plan mode produces an implementation plan, save its final version as `docs/agents/plans/<slug>/PLAN.md`. Use a short lowercase kebab-case slug from the plan name; create the directory if needed. Include the goal, scope, implementation steps, and validation criteria. Give the file path in the final response.
+- When asked to implement an existing plan, find its `PLAN.md` under `docs/agents/plans/` by name or slug and use it as task context. If Plan mode does not permit file writes, provide the plan in the response and save it when write access resumes.
+
+## Build evidence
+
+- `docs/agents/build-logs/build-log.md` is the Git-ignored local source of truth for observed phase progress. Before closing a phase, update its Phase 0–6 summary only from acceptance evidence and append a dated activity entry; preserve failed attempts and correct earlier entries by appending a correction. GitHub issues carry shared cross-clone status.
+- Run `npm run verify -- --task <slug> [--phase <0-6>]` to write a Git-ignored task receipt at `docs/agents/build-logs/<slug>/STATUS.md` and append task verification activity. The optional phase flag labels activity; passing checks do not complete a phase. Reuse a receipt only if Git HEAD and the working-tree fingerprint still match; otherwise rerun affected checks. Never put secrets, arbitrary caller text, or raw application logs in these files.
 
 ## Agent workflow
 
-- Use the primary GPT-5.6 Sol agent for planning, architecture, ambiguity
-  resolution, integration decisions, and final synthesis.
+- Keep planning, architecture, product decisions, integration decisions, and
+  final synthesis with the primary agent. Use its selected default model and
+  reasoning settings.
 - Delegate clear, bounded, independently verifiable implementation, research,
   test, script, and batch tasks to `luna_worker` when delegation saves primary
   agent work or supervision.
+- Use `ambiguous_implementer` for bounded feature work with substantial
+  technical ambiguity that requires deeper exploration and verification. The
+  primary agent resolves product and architecture decisions.
 - Use one Luna worker by default. Use two only when the assignments are genuinely
   independent; do not create parallel workers for overlapping exploration or
   implementation.
-- Use medium reasoning or higher for every Luna implementation task. Use high
-  reasoning for security-sensitive code, persistence and publication workflows,
-  concurrency, cross-service integration, or performance-critical map-engine
-  work. Low reasoning is permitted only for mechanical read-only lookup, simple
-  script supervision, or repetitive batch work with no design or code changes.
-  Luna workers must not spawn additional agents.
+- Use GPT-5.6 Luna with high reasoning by default for delegated tasks, including
+  feature implementation. Use max reasoning for most ambiguous implementations.
+  Lower effort only for mechanical read-only lookup or repetitive work without
+  design or code changes. Workers must not spawn additional agents.
 - Give each worker a concise brief containing its objective, working directory,
   relevant files and context, authorized actions, owned files when editing, and
   completion checks. Prefer `fork_turns="none"` when the brief is sufficient.
@@ -65,7 +90,3 @@ Single-context layout. See `docs/agents/domain.md`.
   blocker or decision.
 - Keep final integration and user-facing conclusions with the primary agent.
   Reconcile worker output against current repository state before accepting it.
-- Low reasoning is the primary-agent default. For architecture, broad planning,
-  difficult debugging, or security-sensitive work, select medium intelligence in
-  the Codex UI or launch Codex with
-  `-c 'model_reasoning_effort="medium"'`.

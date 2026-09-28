@@ -1,5 +1,13 @@
 # Fantasy Map Builder MVP Technical Design
 
+## Implementation status and repository boundaries
+
+The diagram and deep modules below describe the target MVP. [ARCHITECTURE.md](../ARCHITECTURE.md) separates the deployed Phase 0 system from this planned design, and the [Phase 0 progress checklist](agents/phase-0-progress.md) records verification evidence. Today, `atlas/` renders one static map from public R2 through Firebase Hosting, `atlas-cms/` runs Strapi health on Cloud Run with Neon `staging`, and `packages/contracts/` validates the static manifest. `compose.yaml` runs local Strapi, PostgreSQL, and S3-compatible storage. Editor, identity, Draft, Lore, publication, discovery, and moderation modules below are not implemented.
+
+The Phase 0 static manifest is a walking-skeleton contract. It carries one image URL for a 2048×1024 map and is not the full Published Version manifest described later. The local fixture can change; staging uses an immutable release key. Future Terrain Engine, Canvas Document, Draft Persistence, and Publication modules remain unimplemented.
+
+The browser renders DOM controls in React and map content through `@pixi/react` v8. The backend exposes a minimal unauthenticated health route. Public R2 manifest/art reads and staging CORS are verified; presigned PUT/GET, upload ETags, and metadata behavior remain future integration checks. Local object storage validates development wiring only.
+
 ## Design goals
 
 - Keep the high-frequency editor responsive on ordinary desktop hardware.
@@ -13,26 +21,27 @@
 
 ```mermaid
 flowchart LR
-    Browser[React + PixiJS SPA] -->|OAuth and JSON commands| Strapi[Strapi on Cloud Run]
+    Browser[React + PixiJS SPA] -->|web app| Hosting[Firebase Hosting]
+    Browser -->|Google OAuth redirect| Strapi[Strapi on Cloud Run]
+    Hosting -->|future /api rewrite| Strapi
     Browser -->|presigned PUT/GET| PrivateR2[(Private R2 bucket)]
     Browser -->|presigned release uploads| PublicR2[(Public R2 bucket)]
     Strapi --> Neon[(Neon PostgreSQL)]
     Strapi -->|S3 API: sign, validate, finalize| PrivateR2
     Strapi -->|S3 API: finalize release| PublicR2
-    Explorer[Anonymous Explorer] -->|static SPA| Hosting[Firebase Hosting]
-    Explorer -->|immutable release assets| PublicR2
-    Explorer -->|discovery/search| Strapi
+    Explorer[Anonymous Explorer] -->|SPA| Hosting
+    Explorer -->|immutable assets: staging r2.dev; production custom domain| PublicR2
     Hosting --> Browser
 ```
 
 ### Deployment responsibilities
 
-- **Firebase Hosting** serves the static React SPA through its CDN.
+- **Firebase Hosting** serves the Vite SPA from `atlas/dist`. Phase 3 adds a `/api/**` rewrite to Cloud Run; Phase 0 deploys the static site only.
 - **Cloud Run** runs one stateless Strapi container and scales to zero for the low-traffic MVP.
 - **Neon PostgreSQL** stores identity, ownership, authoring content, metadata, search projections, and current Draft/Published pointers. Strapi uses Neon's pooled connection endpoint.
 - **Private Cloudflare R2 bucket** stores Draft terrain tiles, freehand tiles, temporary uploads, and immutable Draft manifests. It has no public domain.
-- **Public Cloudflare R2 bucket** stores immutable release packages and uses a custom domain with cache-friendly headers. The `r2.dev` URL remains disabled in production.
-- **Google OAuth through Strapi Users & Permissions** is the sole Creator identity flow.
+- **Public Cloudflare R2 bucket** stores immutable release packages. Staging uses the reported public `https://pub-ba3ece4cf7ad4e828c1b86747124f613.r2.dev` development URL. Production uses a custom asset subdomain under `kofeejan.com` for caching and controls.
+- **Google OAuth through Strapi Users & Permissions** is the sole Creator identity flow. The provider callback uses the configured absolute Cloud Run backend URL; authenticated browser API calls use the Firebase Hosting origin. Refresh mode uses a secure, HttpOnly `__session` cookie because Hosting forwards only that cookie name to Cloud Run. Browser sign-in and refresh need end-to-end tests.
 
 Place Cloud Run and Neon in the closest practical regions and measure cross-provider latency before production. Use an Asia-Pacific R2 location hint when it matches the initial audience, while treating the hint as placement guidance rather than an application guarantee.
 
@@ -40,7 +49,7 @@ Place Cloud Run and Neon in the closest practical regions and measure cross-prov
 
 Use a TypeScript React SPA built with Vite. React owns routing, dialogs, forms, Lore editing, search, authentication state, and accessible controls. PixiJS owns the high-frequency map viewport.
 
-Do not mirror pointer movement or every brush sample into React state. A thin React adapter mounts one PixiJS application and communicates with the editor through commands and coarse observable state such as selection, save status, and active tool.
+Do not mirror pointer movement or every brush sample into React state. `@pixi/react` mounts the PixiJS application and scene; the future editor communicates with the map engine through commands and coarse observable state such as selection, save status, and active tool.
 
 PixiJS should use its production-recommended WebGL renderer. Terrain buffers become dynamic texture sources; stamps come from sprite sheets; strokes and Hotspots use retained scene objects. The published map uses a flattened base texture plus lightweight interactive overlays.
 
@@ -50,7 +59,7 @@ PixiJS should use its production-recommended WebGL renderer. Terrain buffers bec
 
 Interface responsibilities:
 
-- Create deterministic source fields from a seed and generator settings.
+- Create deterministic source fields from an algorithm version, seed, and generator settings across desktop Chromium and Firefox for that version.
 - Apply a terrain brush command.
 - Derive biome, land/water, coastline, hill-shading, water tint, and contours for dirty tiles.
 - Apply horizontal wrapping and vertical clamping consistently.
@@ -128,7 +137,7 @@ Interface responsibilities:
 Implementation:
 
 - Reads only published projections, never Draft authoring tables.
-- Excludes Unlisted, unpublished, moderated, deleted, or suspended content by construction.
+- Direct map URLs resolve both Public and Unlisted Published Versions, including Administrator-unlisted Maps. Discovery, search, and Creator Profiles include only eligible Public Maps; unpublished, deleted, and suspended Maps do not resolve by direct URL.
 - Returns immutable public release URLs suitable for CDN caching.
 
 ### Identity and Ownership module
@@ -172,7 +181,7 @@ The complete uncompressed source fields require about 8 MiB per map. Incremental
 The immutable JSON manifest contains:
 
 - schema version and map dimensions;
-- generator metadata for reproducibility;
+- generator algorithm version, seed, and settings for reproducibility;
 - sea level and rendering defaults;
 - terrain tile keys and checksums;
 - freehand tile keys and checksums;
@@ -231,21 +240,21 @@ Mutation requests use idempotency keys where retries could duplicate work. Destr
 - Keep R2 credentials, Strapi secrets, OAuth secret, and Neon connection strings only in Cloud Run secrets/configuration.
 - Issue short-lived presigned URLs for one exact key and operation.
 - Restrict upload content type and expected size; verify the uploaded object before committing references.
-- Configure R2 CORS for exact production and local-development origins.
+- Configure R2 CORS for exact staging, production, and local-development origins. Test public GET through staging `r2.dev` and production custom domain separately from presigned PUT/GET through the R2 S3 API hostname; presigned URLs cannot use either public hostname. Allow only required methods and headers, and expose `ETag` where the browser verifies uploads.
 - Sanitize Lore rich text server-side before inclusion in a release.
 - Enforce ownership in one policy/module on every private route.
 - Keep the private R2 bucket non-public and disable its development URL.
 - Use random IDs in object paths and reject caller-supplied R2 keys.
 - Strip email and OAuth tokens from public responses and logs.
 - Add CSP, frame restrictions, referrer policy, and safe cross-origin headers at Firebase Hosting.
-- Public release assets are intentionally readable; Draft assets are never public.
+- Public release assets are intentionally readable; Draft assets are never public. Set mutable map-resolution, discovery, search, and authenticated API responses to avoid shared caching; immutable release assets retain long-lived cache headers.
 
 ## Reliability and cleanup
 
 - A publish is a pointer switch, not in-place overwrite.
 - The prior release remains valid until finalization completes.
 - A scheduled cleanup removes abandoned upload plans, unreferenced Draft objects, superseded releases after the safety window, and deleted-map assets.
-- Deletion first marks the map unavailable transactionally, then performs idempotent R2 cleanup.
+- Unpublishing, suspension, and deletion remove affected maps immediately from public map routes, discovery, and search. Deletion first marks the map unavailable transactionally, then performs idempotent R2 cleanup. Direct immutable asset URLs may remain readable until cleanup and cache expiry.
 - R2 object operations store and compare checksums/ETags.
 - Database backups and provider recovery features are operational safeguards, not user-facing version history.
 
@@ -258,21 +267,23 @@ Mutation requests use idempotency keys where retries could duplicate work. Destr
 
 ## Testing strategy
 
-- **Terrain Engine:** deterministic golden seeds, wrap-seam continuity, vertical clamping, biome classification, contour extraction, and dirty-tile tests.
+- **Terrain Engine:** versioned deterministic golden seeds across desktop Chromium and Firefox, wrap-seam continuity, vertical clamping, biome classification, contour extraction, and dirty-tile tests.
 - **Canvas Document:** command, undo/redo, layer order, transform, hotspot, and canonical manifest tests through its interface.
 - **Draft Persistence:** in-memory object-store tests for upload failure, retry, stale revision, and manifest commit ordering.
 - **Publication:** failure injection at every step proves the old release remains public; concurrent publish and stale Draft cases are mandatory.
-- **Backend integration:** Strapi with PostgreSQL in CI, authorization matrices, Google callback adapter tests, deletion cleanup, and public-query leakage tests.
+- **Backend integration:** Strapi with PostgreSQL in CI, authorization matrices, Google callback adapter tests, browser sign-in and refresh through the Hosting `/api/**` rewrite and `__session` cookie, deletion cleanup, and public-query leakage tests.
 - **R2 adapter contract:** local S3-compatible tests plus a small staging smoke suite against R2 for presigning, CORS, ETags, and content types.
 - **Frontend:** React Testing Library for forms and accessible controls; Playwright for the primary Creator and Explorer journeys.
 - **Visual regression:** fixed generator seeds and editor commands produce stable map screenshots at representative zooms.
-- **Performance budgets:** generation and common brush updates must remain interactive on the agreed baseline device; publish and initial Explorer load are measured in CI or staging.
+- **Performance budgets:** on a 4-core, 8 GB RAM laptop with an integrated GPU and Chromium, generation reaches a usable rendered 2048×1024 map within 3 seconds at the 95th percentile and completed brush actions render within 50 ms at the 95th percentile. Record device, browser, seed, and runs; the exact reference device or CI runner and run count remain undecided before Phase 1 acceptance. Measure publish and initial Explorer load separately in CI or staging.
 
 ## External references
 
 - [PixiJS renderers](https://pixijs.com/8.x/guides/components/renderers)
 - [PixiJS textures](https://pixijs.com/8.x/guides/components/textures)
-- [Firebase Hosting](https://firebase.google.com/docs/hosting/)
+- [Firebase Hosting rewrites](https://firebase.google.com/docs/hosting/full-config)
+- [Firebase Hosting cookie forwarding](https://firebase.google.com/docs/hosting/manage-cache)
+- [Strapi Users & Permissions](https://docs.strapi.io/cms/features/users-permissions)
 - [Cloud Run container runtime and ephemeral filesystem](https://docs.cloud.google.com/run/docs/container-contract)
 - [Cloudflare R2 S3 compatibility](https://developers.cloudflare.com/r2/api/s3/api/)
 - [Cloudflare R2 presigned URLs](https://developers.cloudflare.com/r2/api/s3/presigned-urls/)

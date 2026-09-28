@@ -2,46 +2,39 @@
 
 ## Delivery strategy
 
-Build vertical slices that remain deployable. Prove map rendering, persistence, and publication risks before polishing the full editor. Every phase ends with observable behavior and automated checks.
+Build vertical slices that remain deployable. First ship a quick staging prototype: a read-only demo map, public R2 asset, and reachable CMS health route. Then build the editor and publication workflow. Defer production domains, operational hardening, and launch checks until those flows work. Every phase ends with observable behavior and automated checks.
 
-## Proposed repository layout
+## Current repository layout
 
 ```text
-apps/
-  web/                 React/Vite Creator and Explorer SPA
-  cms/                 Strapi application and custom backend modules
+atlas/                 React, PixiJS, and Vite frontend
+atlas-cms/             Strapi application and Cloud Run container
 packages/
-  domain/              Shared domain values, commands, manifests, schemas
-  map-engine/          Terrain Engine and Canvas Document
-  contracts/           Versioned HTTP and release-manifest contracts
-  test-support/        Deterministic fixtures and in-memory adapters
-public/
-  stamps/              Built-in licensed/original sprite sheets
-docs/
-  adr/
+  contracts/           Shared static-map manifest contract
+docs/                  Product, architecture, and agent guidance
+compose.yaml           Local CMS, PostgreSQL, and S3-compatible storage
 ```
 
-Use one TypeScript workspace so frontend, backend, workers, contracts, and tests share schema types without copying them. Keep runtime-specific code out of `domain` and `contracts`.
+The root npm workspace has one lockfile. Add `domain`, `map-engine`, and `test-support` packages when their Phase 1–3 interfaces are implemented; do not create empty packages now. Keep runtime-specific code out of `contracts`.
 
 ## Phase 0: Foundation and walking skeleton
 
-### Deliverables
+### Progress checklist
 
-- TypeScript workspace, formatting, linting, Vitest, Playwright, and CI.
-- React/Vite shell deployed to Firebase Hosting preview.
-- Strapi container running locally and on Cloud Run staging.
-- Neon pooled PostgreSQL connection.
-- Private and public R2 buckets with least-privilege credentials and exact CORS rules.
-- Health endpoints, structured logging, secrets documentation, and budget alerts.
-- One static public map manifest rendered by PixiJS from R2.
+See the [dated Phase 0 checklist](agents/phase-0-progress.md) for local, cloud, CI, and private R2 denial evidence.
 
 ### Exit checks
 
-- CI builds and tests both applications.
-- Staging deployment serves SPA, API health, and one immutable map asset.
-- Private bucket is not publicly readable; public bucket works only through intended production/development paths.
+- CI builds and tests both applications and the shared contract from a clean root install.
+- Local Compose starts PostgreSQL, object store, and CMS; API health is available.
+- Firebase Hosting serves the built SPA from `atlas/dist`; the browser loads one immutable demo map from the published bucket's `r2.dev` URL.
+- A staging Cloud Run service runs the CMS Docker image and answers `GET /api/health` at its default `run.app` URL. Confirm the CMS uses the Neon `staging` branch separately; the health route does not prove database connectivity.
+
+Build with the public R2 manifest URL and deploy Hosting only; Firestore and Functions are not Phase 0 dependencies. Resolve dependency triage issue #19 before starting Phase 1. Private R2 denial is required before Draft uploads, and signed-operation/CORS checks before browser uploads. Triage the high dependency findings in #19 before publicly exposing the CMS. Full budget alerting belongs before production launch.
 
 ## Phase 1: Terrain Engine and viewport
+
+The [Phase 1 readiness interview](agents/phase-1-readiness.md) records resolved decisions and open benchmark setup. Issue #19 must close before implementation starts.
 
 ### Deliverables
 
@@ -52,12 +45,16 @@ Use one TypeScript workspace so frontend, backend, workers, contracts, and tests
 - Elevation, temperature, and moisture brushes.
 - Blank-map and generated-map creation in memory.
 
+Phase 1 and Phase 2 keep Map editing in browser memory. Sign-in and durable Draft persistence begin in Phase 3. The generator records an algorithm version and reproduces the same starting terrain across desktop Chromium and Firefox for the same version, seed, and settings ([ADR 0005](adr/0005-version-generated-terrain.md)).
+
 ### Exit checks
 
-- Golden seed tests are deterministic.
+- Golden seed tests are deterministic across desktop Chromium and Firefox for a given algorithm version.
 - Seam painting and rendering are continuous.
 - Brush updates recompute only dirty tiles.
-- Generation and normal brush interaction meet the initial performance budget on a baseline laptop.
+- On a 4-core laptop with 8 GB RAM, an integrated GPU, and Chromium, the 95th percentile from the Generate action to a usable rendered 2048×1024 map is at most 3 seconds, and completed brush actions become visible within 50 ms at the 95th percentile. Record CPU, GPU, operating system, Chromium version, seed, and measurement runs with results.
+
+The exact reference device or CI runner for these budgets remains undecided. Agree on it and the run count before Phase 1 performance acceptance; do not report the budget as passed on an unrecorded machine.
 
 ## Phase 2: Canvas artwork and editor behavior
 
@@ -82,7 +79,9 @@ Use one TypeScript workspace so frontend, backend, workers, contracts, and tests
 
 ### Deliverables
 
-- Strapi Users & Permissions Google provider.
+- Strapi Users & Permissions Google provider; disable email/password Creator sign-in.
+- Add a Firebase Hosting `/api/**` rewrite to Cloud Run for same-origin browser API calls; keep the Google OAuth backend callback URL explicit.
+- Strapi refresh-mode session with a secure, HttpOnly `__session` cookie configured for Hosting-to-Cloud Run forwarding.
 - Creator profile creation and editing.
 - Map list/create/rename/delete flows.
 - Task-oriented private routes with centralized ownership policy.
@@ -94,6 +93,7 @@ Use one TypeScript workspace so frontend, backend, workers, contracts, and tests
 ### Exit checks
 
 - An authenticated Creator cannot access another Creator's Draft or signed URLs.
+- Browser tests prove Google sign-in and refresh through Firebase Hosting and Cloud Run, including `__session` forwarding.
 - Refresh restores the latest committed Draft.
 - Injected upload failures never commit manifests referencing missing objects.
 - Two-tab tests prove stale saves return conflict instead of overwriting.
@@ -149,11 +149,11 @@ Use one TypeScript workspace so frontend, backend, workers, contracts, and tests
 
 ### Exit checks
 
-- Moderated/suspended content disappears from all public resolution and search paths.
-- Deletion makes content inaccessible before background cleanup begins.
+- Moderated, suspended, and deleted maps disappear immediately from public map routes, discovery, and search. Direct immutable asset URLs may remain readable until asynchronous cleanup and cache expiry.
+- Deletion removes map-route access before background cleanup begins.
 - Cleanup retries safely and leaves an auditable operational result.
 - End-to-end Creator and Explorer acceptance journeys pass in staging.
-- Production launch checklist and rollback procedure are complete.
+- Production Firebase Hosting, Cloud Run, and R2 subdomains under `kofeejan.com`, launch checklist, and rollback procedure are complete. Disable public `r2.dev` access after production asset routing is verified.
 
 ## Cross-cutting test matrix
 
@@ -164,7 +164,7 @@ Use one TypeScript workspace so frontend, backend, workers, contracts, and tests
 | Partial publication | Failure injection, immutable keys, transactional pointer switch |
 | Draft leakage | Authorization and public-query leakage tests |
 | Cross-map relations | Database constraints/service validation tests |
-| Public moderation | Resolution, discovery, cache, and search removal tests |
+| Public moderation | Immediate map-route, discovery, and search removal tests; document direct-asset cleanup and cache limits |
 | Cost growth | Object count/storage metrics, cleanup metrics, provider budget alerts |
 | Browser performance | Deterministic performance scene, texture memory, brush latency, initial load |
 

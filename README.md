@@ -1,8 +1,8 @@
 # Fantasy Map Builder
 
-Fantasy Map Builder is a planned web application for creating and publishing interactive 2D fantasy worlds. Creators can generate or paint terrain, add hand-drawn map features, connect locations to rich Lore, and publish the complete world at a shareable URL.
+Fantasy Map Builder is a web application for creating and publishing interactive 2D fantasy worlds. Creators can generate or paint terrain, add hand-drawn map features, connect locations to rich Lore, and publish the complete world at a shareable URL.
 
-The project is currently in the design phase. Product requirements, architecture, domain language, and delivery phases are documented; application code has not yet been scaffolded.
+Phase 0 staging prototype is live: a React/PixiJS read-only map on Firebase Hosting, public R2 assets, and a Strapi health service on Cloud Run connected to Neon staging. The full editor and publication journey remain planned work.
 
 ## MVP capabilities
 
@@ -46,25 +46,40 @@ The project is currently in the design phase. Product requirements, architecture
 - [Data model](docs/data-model.md)
 - [Implementation plan](docs/implementation-plan.md)
 - [Domain glossary](CONTEXT.md)
+- [Architecture overview](ARCHITECTURE.md)
+- [Design overview](DESIGN.md)
 - [Architecture decisions](docs/adr/)
+- [Local and staging runbooks](docs/runbooks/README.md)
+- [Local Codex setup](docs/agents/codex-setup.md)
 
-## Planned repository structure
+## Repository
 
 ```text
-apps/
-  web/                 React and PixiJS application
-  cms/                 Strapi application and backend modules
+atlas/                 React, PixiJS, and Vite frontend
+atlas-cms/             Strapi backend and container
 packages/
-  domain/              Shared domain values and commands
-  map-engine/          Terrain and canvas modules
-  contracts/           HTTP and release-manifest contracts
-  test-support/        Fixtures and test adapters
-public/
-  stamps/              Built-in map artwork
+  contracts/           Shared static-map manifest contract
 docs/                  Product and engineering documentation
+compose.yaml           Local CMS, PostgreSQL, and object store
+firebase.json         Staging Firebase Hosting configuration
 ```
 
-## Development status
+The root uses npm workspaces and one `package-lock.json`. Other shared packages from the technical design will be added when their features begin.
 
-No application framework, package manifest, or build commands exist yet. The first implementation phase will establish the TypeScript workspace, React application, Strapi backend, automated checks, and staging infrastructure described in the [implementation plan](docs/implementation-plan.md).
+## Local setup
+
+Use Node 24 and Docker. From the repository root:
+
+```sh
+npm ci
+npm run dev:web
+npm run dev:cms
+npm run lint
+npm run typecheck
+npm test
+npm run build
+npm run verify -- --task local
+```
+
+`docker compose up --build` runs the CMS with local PostgreSQL and S3-compatible storage. Development-only credentials in Compose are not for staging. Keep real credentials in ignored local environment files, never in source or logs.
 
