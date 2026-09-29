@@ -1,5 +1,8 @@
 # Fantasy Map Builder architecture
 
+> **Scope update (2026-09-29):** The [private pilot decision](docs/agents/private-pilot-scope.md) governs the first release. The later MVP progression and references to Lore, search, moderation, deletion, and production launch below are historical proposals.
+
+
 Fantasy Map Builder turns a Creator's private editable Map into an immutable Published Version that an anonymous Explorer can read. This document distinguishes the deployed Phase 0 prototype from the planned MVP. [CONTEXT.md](CONTEXT.md) defines domain language; [technical design](docs/technical-design.md) and [data model](docs/data-model.md) hold detailed contracts.
 
 ## What runs today

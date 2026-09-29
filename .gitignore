@@ -1,6 +1,7 @@
 !/docs/agents/*.md
-/docs/agents/plans/
-/docs/agents/build-logs/
+/docs/agents/plans/*
+/docs/agents/build-logs/*
+/docs/agents/archived/*
 .codex/
 CREDENTIALS.md
 .env
@@ -18,3 +19,7 @@ test-results/
 .firebase/
 firebase-debug.log
 firebase-debug.*.log
+docs/adr/0006-limit-first-release-to-private-map-pilot.md
+
+# Personal working notes and showcase planning.
+/docs/personal/

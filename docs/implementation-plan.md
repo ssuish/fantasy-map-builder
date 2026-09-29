@@ -1,5 +1,8 @@
 # Fantasy Map Builder MVP Implementation Plan
 
+> **Scope update (2026-09-29):** Phase descriptions below reflect the earlier, broader MVP. Use the [private map pilot decision](agents/private-pilot-scope.md) for the first release boundary, sequence, and gates. Rework phase and issue acceptance before marking new tickets ready.
+
+
 ## Delivery strategy
 
 Build vertical slices that remain deployable. First ship a quick staging prototype: a read-only demo map, public R2 asset, and reachable CMS health route. Then build the editor and publication workflow. Defer production domains, operational hardening, and launch checks until those flows work. Every phase ends with observable behavior and automated checks.

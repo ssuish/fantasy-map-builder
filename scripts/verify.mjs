@@ -169,7 +169,7 @@ const phaseRows = [
     branch: "—",
     started: "—",
     completed: "—",
-    evidence: "docs/implementation-plan.md#phase-1-terrain-engine-and-viewport (planned scope only)",
+    evidence: "docs/agents/private-pilot-scope.md; issues #2–#3 (planned scope only)",
     blockers: "Dependency triage issue #19 must be resolved before Phase 1.",
   },
   {
@@ -178,7 +178,7 @@ const phaseRows = [
     branch: "—",
     started: "—",
     completed: "—",
-    evidence: "docs/implementation-plan.md#phase-2-canvas-artwork-and-editor-behavior (planned scope only)",
+    evidence: "docs/agents/private-pilot-scope.md; issues #4 and #6 (planned scope only)",
     blockers: "Phase 1 acceptance evidence is not recorded.",
   },
   {
@@ -187,7 +187,7 @@ const phaseRows = [
     branch: "—",
     started: "—",
     completed: "—",
-    evidence: "docs/implementation-plan.md#phase-3-identity-ownership-and-draft-autosave (planned scope only)",
+    evidence: "docs/agents/private-pilot-scope.md; issues #7–#10 (planned scope only)",
     blockers: "Phase 2 acceptance evidence is not recorded.",
   },
   {
@@ -196,8 +196,8 @@ const phaseRows = [
     branch: "—",
     started: "—",
     completed: "—",
-    evidence: "docs/implementation-plan.md#phase-4-lore-and-interactive-map-content (planned scope only)",
-    blockers: "Phase 3 acceptance evidence is not recorded.",
+    evidence: "Legacy Lore phase; deferred from private pilot",
+    blockers: "Historical phase; no pilot acceptance is assigned.",
   },
   {
     phase: "Phase 5",
@@ -205,8 +205,8 @@ const phaseRows = [
     branch: "—",
     started: "—",
     completed: "—",
-    evidence: "docs/implementation-plan.md#phase-5-atomic-publication-and-explorer-experience (planned scope only)",
-    blockers: "Phase 4 acceptance evidence is not recorded.",
+    evidence: "docs/agents/private-pilot-scope.md; issues #14–#15 (planned scope only)",
+    blockers: "Draft and ownership integration evidence for #14 is not recorded.",
   },
   {
     phase: "Phase 6",
@@ -214,8 +214,8 @@ const phaseRows = [
     branch: "—",
     started: "—",
     completed: "—",
-    evidence: "docs/implementation-plan.md#phase-6-moderation-deletion-and-launch-hardening (planned scope only)",
-    blockers: "Phase 5 acceptance evidence is not recorded.",
+    evidence: "Legacy launch phase; deferred from private pilot",
+    blockers: "Historical phase; pilot readiness is issue #24.",
   },
 ];
 
@@ -258,6 +258,7 @@ const renderCanonicalLog = (activityBody = "") => [
   "Ignored local source of truth for observed phase status, task verification evidence, and phase activity.",
   "Phase status changes require phase acceptance evidence; task verification never changes phase status automatically.",
   "Planned work is not evidence. The phase summary is current; activity entries are append-only. Task results are historical until their HEAD and fingerprint match the current tree.",
+  "Current first-release scope: docs/agents/private-pilot-scope.md. Phase 4 Lore and Phase 6 launch are legacy rows, not pilot gates; pilot readiness is issue #24.",
   "",
   "## Phase summary",
   "",

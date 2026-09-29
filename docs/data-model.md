@@ -1,5 +1,8 @@
 # Fantasy Map Builder MVP Data Model
 
+> **Historical target model (2026-09-29):** The [private pilot scope](agents/private-pilot-scope.md) limits the first release. Lore, search, profiles, Unlisted visibility, moderation, and deletion fields below are deferred proposals. Define the retained Canvas Document and Draft schema before implementation.
+
+
 ## Modeling principles
 
 - PostgreSQL owns queryable identity, ownership, authoring content, relations, visibility, moderation, and current pointers.

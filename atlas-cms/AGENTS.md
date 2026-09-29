@@ -1,6 +1,6 @@
 # Atlas CMS agent instructions
 
-Follow the repository-root `AGENTS.md` for shared workflow, privacy, and coding rules. These notes add CMS-specific guidance.
+Follow the repository-root `AGENTS.md` and `docs/agents/private-pilot-scope.md` for current scope, privacy, and coding rules. The pilot permits one owned Map per invited Creator, private Draft persistence, and Public immutable publication/republishing. Lore, search, profiles, Unlisted mode, moderation, and deletion are deferred. These notes add CMS-specific guidance.
 
 ## Workspace and commands
 
