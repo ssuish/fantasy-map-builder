@@ -7,6 +7,20 @@ export interface StaticMapManifest {
   imageUrl: string;
 }
 
+const mapImagePath = /\.(?:svg|png|jpe?g|webp|avif)$/i;
+
+function isSupportedMapImageUrl(value: unknown): value is string {
+  if (typeof value !== "string" || value.length === 0) return false;
+
+  try {
+    const url = new URL(value, "https://atlas.invalid");
+    return (url.protocol === "http:" || url.protocol === "https:") &&
+      mapImagePath.test(url.pathname);
+  } catch {
+    return false;
+  }
+}
+
 export function parseStaticMapManifest(value: unknown): StaticMapManifest {
   if (typeof value !== "object" || value === null) {
     throw new TypeError("Static map manifest must be an object");
@@ -21,8 +35,7 @@ export function parseStaticMapManifest(value: unknown): StaticMapManifest {
     manifest.title.length === 0 ||
     manifest.width !== 2048 ||
     manifest.height !== 1024 ||
-    typeof manifest.imageUrl !== "string" ||
-    manifest.imageUrl.length === 0
+    !isSupportedMapImageUrl(manifest.imageUrl)
   ) {
     throw new TypeError("Invalid static map manifest");
   }

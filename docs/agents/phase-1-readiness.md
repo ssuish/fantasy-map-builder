@@ -16,6 +16,6 @@ Current `atlas/` and `atlas-cms/` code, `CONTEXT.md`, ADRs 0001–0004, `docs/pr
 ## Still unresolved
 
 - Choose the exact reference device or CI runner and run count for the existing p95 generation and brush budgets before Phase 1 performance acceptance. The user left this to be determined; no benchmark can be reported as passing until the setup and measurements are recorded.
-- Issue #19 remains open. Current production-scope audit reports 22 moderate and one high Vite entry. Docker image, upload, and email integration evidence from the cleaned lockfile remain outstanding.
+- Issue #19 remains open. Current production-scope audit reports 22 moderate and one high Vite entry. CI built and health-checked the CMS image from the cleaned lockfile; publishing its digest and checking the new image in staging remain open. Upload and email integration checks remain separate outstanding work.
 
 Before implementation, rerun `/grill-with-docs` against the then-current code and issue state. Resolve new contradictions rather than treating this dated interview as perpetual approval.

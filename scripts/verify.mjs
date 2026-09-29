@@ -41,8 +41,11 @@ const isPrivatePath = (path) => {
   const base = normalized.split("/").at(-1) ?? normalized;
   return (base.startsWith(".env") && base !== ".env.example") || /^CREDENTIALS(?:\.|$)/i.test(base);
 };
-const untracked = git("ls-files", "--others", "--exclude-standard")
-  .split("\n")
+const untracked = execFileSync("git", ["ls-files", "--others", "--exclude-standard", "-z"], {
+  encoding: "utf8",
+  maxBuffer: 20 * 1024 * 1024,
+})
+  .split("\0")
   .filter(Boolean)
   .map((path) => {
     const stat = statSync(path);
