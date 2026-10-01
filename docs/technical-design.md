@@ -1,5 +1,8 @@
 # Fantasy Map Builder MVP Technical Design
 
+> **Historical target design (2026-09-29):** The [private pilot scope](agents/private-pilot-scope.md) removes Lore, discovery, moderation, deletion, and other sections below from the first release. Treat their details as historical proposals, not pilot acceptance.
+
+
 ## Implementation status and repository boundaries
 
 The diagram and deep modules below describe the target MVP. [ARCHITECTURE.md](../ARCHITECTURE.md) separates the deployed Phase 0 system from this planned design, and the [Phase 0 progress checklist](agents/phase-0-progress.md) records verification evidence. Today, `atlas/` renders one static map from public R2 through Firebase Hosting, `atlas-cms/` runs Strapi health on Cloud Run with Neon `staging`, and `packages/contracts/` validates the static manifest. `compose.yaml` runs local Strapi, PostgreSQL, and S3-compatible storage. Editor, identity, Draft, Lore, publication, discovery, and moderation modules below are not implemented.

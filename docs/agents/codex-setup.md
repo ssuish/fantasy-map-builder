@@ -1,5 +1,7 @@
 # Local Codex setup
 
+The current first-release boundary is [private-pilot-scope.md](private-pilot-scope.md). Root and app `AGENTS.md` files should use it before the older broad MVP plan; closed deferred issues remain historical.
+
 Project `.codex/` settings and installed `.agents/skills/` directories are intentionally Git-ignored. Root and app `AGENTS.md` files are tracked instructions; `skills-lock.json` files record the sources of locally installed skills. Restore the needed PixiJS, Strapi, and cloud skills before work that depends on them, or use current official documentation when a local skill is unavailable.
 
 For this project, leave the primary agent's model, reasoning effort, context window, and compaction at Codex defaults. This setup does not claim an effective 1M-token context window. Configure four worker slots and GPT-5.6 Luna with high reasoning as the subagent default in `.codex/config.toml`:

@@ -1,5 +1,7 @@
 # Domain Docs
 
+Before exploring, read the [current private pilot scope](private-pilot-scope.md). It controls first-release boundaries; broader product and architecture documents retain historical proposals.
+
 Before exploring, read the relevant domain documentation:
 
 - `CONTEXT.md` at the repo root.

@@ -1,5 +1,8 @@
 # Fantasy Map Builder MVP Product Specification
 
+> **Scope update (2026-09-29):** This document describes the earlier, broader MVP. The first release is now the [private map pilot](agents/private-pilot-scope.md). Its keep/defer list takes precedence until this specification is rewritten for the later public release.
+
+
 ## Product goal
 
 Fantasy Map Builder lets a Creator make a hand-authored, interactive fantasy map and publish it as an explorable world. Terrain follows a small, understandable physical model; fantasy artwork and Lore remain under the Creator's control.

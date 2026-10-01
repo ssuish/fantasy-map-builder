@@ -14,12 +14,14 @@ Issues and specs for this repo live as GitHub issues. Use the `gh` CLI for all o
 
 Infer the repo from `git remote -v`; `gh` detects it from this clone.
 
+## Private pilot issue set
+
+Use [private-pilot-scope.md](private-pilot-scope.md) as the current scope and the live issue body as the acceptance contract. #19 is the current ready-for-work dependency gate. Retained pilot tickets are #2–#4, #6–#10, #14–#15, and #24. Issues #5, #11–#13, #16–#18, and #20 were closed as `not planned` for this pilot; their descriptions are historical and do not gate pilot work. A later public launch needs a new scope decision and ticket.
+
 ## Phase and readiness labels
 
-`phase:0` through `phase:6` match `docs/implementation-plan.md`. `planned` means a
-later phase, not the next implementation target. `ready-for-work` is reserved
-for the next actionable gate; as of the Phase 0 handoff, that is dependency
-triage issue #19. `ready-for-human` flags work that will require manual setup
+`phase:0` through `phase:6` are legacy labels from the broader `docs/implementation-plan.md`. They are useful for historical grouping, not a current pilot dependency graph. `planned` means a later task, not the next implementation target. `ready-for-work` is reserved
+for the next actionable gate; currently that is dependency triage issue #19. `ready-for-human` flags work that will require manual setup
 when its phase begins. Do not infer completion from a label: use the issue's
 acceptance criteria and observed build evidence.
 

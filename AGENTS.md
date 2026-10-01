@@ -4,6 +4,14 @@
 
 The root npm workspace contains `atlas/` (React, PixiJS, and Vite), `atlas-cms/` (Strapi), and `packages/contracts/` (shared static-map contract). Use the root `package-lock.json` and run workspace commands from the repository root. App-specific instructions live in each app's `AGENTS.md`. Keep shared code in focused packages rather than duplicating contracts.
 
+## Current project scope
+
+The first release is a private pilot. Read `docs/agents/private-pilot-scope.md` before planning, implementing, reviewing, or verifying feature work. It takes precedence over the older broad MVP sections of `docs/product-spec.md`, `docs/technical-design.md`, `docs/data-model.md`, `docs/implementation-plan.md`, and `ARCHITECTURE.md`. Those documents contain historical proposals, not pilot acceptance.
+
+Each invited Creator may own one fixed 2048×1024 Map: blank or deterministic generated terrain, elevation/temperature/moisture Brushes, Freehand Drawing, basic road/river Feature Strokes, session undo/redo, private Draft save/restore, and explicit Public immutable publication/republishing. Anonymous Explorers can open a stable URL and pan/zoom the Published Version. Use the existing Firebase Hosting, Cloud Run/Strapi, Neon staging, and R2 path. Pilot acceptance requires ownership isolation, revision conflicts, upload-before-manifest ordering, failed-publish preservation, and an exercised Draft/Published Version restore before real Creator data is accepted.
+
+Symbol Stamps, regeneration, Hotspots, Points of Interest, Lore, Unlisted mode, search, discovery, Creator Profile pages, moderation, deletion, production launch, and touch-first editing are outside the pilot. Closed issues #5, #11–#13, #16–#18, and #20 are historical, not completed. #19 is the current ready-for-work gate; retained pilot work is in #2–#4, #6–#10, #14–#15, and pilot-readiness #24. Do not add deferred work or use legacy phase acceptance as a pilot requirement without a new scope decision.
+
 ## Build, Test, and Development Commands
 
 Run `npm ci` at the root. Use `npm run dev:web` and `npm run dev:cms` for local apps; use `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`, and `npm run verify -- --task <slug>` for checks. `docker compose up --build` starts the local CMS, PostgreSQL, and object store. Run relevant checks before submitting changes and report checks that could not be run.
@@ -64,6 +72,8 @@ an unanswered question as approval or a planned check as passing evidence.
 - `docs/agents/build-logs/build-log.md` is the Git-ignored local source of truth for observed phase progress. Before closing a phase, update its Phase 0–6 summary only from acceptance evidence and append a dated activity entry; preserve failed attempts and correct earlier entries by appending a correction. GitHub issues carry shared cross-clone status.
 - Run `npm run verify -- --task <slug> [--phase <0-6>]` to write a Git-ignored task receipt at `docs/agents/build-logs/<slug>/STATUS.md` and append task verification activity. The optional phase flag labels activity; passing checks do not complete a phase. Reuse a receipt only if Git HEAD and the working-tree fingerprint still match; otherwise rerun affected checks. Never put secrets, arbitrary caller text, or raw application logs in these files.
 
+The Phase 0–6 rows and optional `--phase` flag retain the original phase labels for historical evidence. For pilot work, use a task receipt without `--phase` unless the work genuinely belongs to a retained, clearly mapped phase. Former Phase 4 Lore and Phase 6 launch acceptance are not pilot gates. A passing receipt does not prove pilot acceptance; use issue criteria and #24's deployed recovery evidence.
+
 ## Agent workflow
 
 - Keep planning, architecture, product decisions, integration decisions, and
@@ -72,9 +82,6 @@ an unanswered question as approval or a planned check as passing evidence.
 - Delegate clear, bounded, independently verifiable implementation, research,
   test, script, and batch tasks to `luna_worker` when delegation saves primary
   agent work or supervision.
-- Use `ambiguous_implementer` for bounded feature work with substantial
-  technical ambiguity that requires deeper exploration and verification. The
-  primary agent resolves product and architecture decisions.
 - Use one Luna worker by default. Use two only when the assignments are genuinely
   independent; do not create parallel workers for overlapping exploration or
   implementation.

@@ -2,7 +2,7 @@
 
 `npm run verify -- --task <task-slug>` writes the latest command receipt to the Git-ignored `docs/agents/build-logs/<task-slug>/STATUS.md` file and appends a verification activity entry to the canonical `docs/agents/build-logs/build-log.md`.
 
-Use `--phase <0-6>` only to label the task activity with its observed scope. The verifier never changes a phase status from a task receipt or from passing local checks.
+The Phase 0–6 names are historical labels from the broader MVP plan. Use `--phase <0-6>` only when the task genuinely matches a retained phase; otherwise omit it. The first-release scope and gates are in [private-pilot-scope.md](private-pilot-scope.md). The verifier never changes a phase status from a task receipt or from passing local checks.
 
 ## Canonical log
 
@@ -12,7 +12,7 @@ Use `--phase <0-6>` only to label the task activity with its observed scope. The
 - A separate task receipt table preserving historical `STATUS.md` evidence without treating task results as phase completion. A `passed` result is historical, not a freshness claim; inspect that receipt's HEAD and fingerprint before reuse.
 - Append-only activity entries with the observed branch, exact checks and exit codes, skipped checks, limitations, blockers, and evidence paths.
 
-Phase 0 is complete only because issue #1, the Phase 0 checklist, CI, Hosting, Cloud Run, and private R2 denial evidence support its acceptance. Phases 1–6 remain `Not started` until their own acceptance evidence is observed. Planned scope and passing local checks do not establish phase completion.
+Phase 0 is complete only because issue #1, the Phase 0 checklist, CI, Hosting, Cloud Run, and private R2 denial evidence support its acceptance. Later phase rows remain `Not started` until their own acceptance evidence is observed. Former Phase 4 Lore and Phase 6 public-launch work are outside the pilot; do not treat those rows as pilot gates. The pilot's final deployed and recovery gate is issue #24. Planned scope and passing local checks do not establish phase completion.
 
 ## Corrections and freshness
 
