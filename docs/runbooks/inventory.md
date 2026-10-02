@@ -1,17 +1,17 @@
 # Environment and resource inventory
 
-Known Phase 0 resources on 2026-09-28. Secret values and connection strings are absent. Recheck live state before mutation.
+Staging inventory verified on 2026-10-02. Phase 0 remains a read-only prototype. Secret values and connection strings are absent. Recheck live state before mutation.
 
 ## Staging
 
 | Resource | Identifier or endpoint | Region or scope | Evidence |
 |---|---|---|---|
 | Google Cloud / Firebase project | atlas-project-509605 | Cloud Run asia-southeast1 | Firebase selected project; production separate. |
-| Firebase Hosting | https://atlas-project-509605.web.app | Global | Hosting version 8db9b1e6cd0365fe served demo. |
+| Firebase Hosting | https://atlas-project-509605.web.app | Global | Hosting version 2fe3d7ecf6e1d308 served demo; desktop/mobile R2 smoke passed. |
 | Hosting workflow | .github/workflows/firebase-hosting-merge.yml | GitHub stage | Uses Node 24 and repository service account secret. |
-| Cloud Run service | map-builder-cms-staging | asia-southeast1 | Revision map-builder-cms-staging-00003-z86 health 200. |
+| Cloud Run service | map-builder-cms-staging | asia-southeast1 | Revision map-builder-cms-staging-strapi556-20261002 receives 100% traffic; health/admin and public denial checks passed. |
 | Cloud Run URL | https://map-builder-cms-staging-zgyfospy5q-as.a.run.app | Public run.app | Public health access enabled. |
-| Cloud Run image | docker.io/adreanq/map-builder-cms@sha256:8b06a5132755f2b4520e6e06b3a89113ede5c8bc5c71fc72add97cbf0803d56e | Docker Hub | Verified digest. |
+| Cloud Run image | docker.io/adreanq/map-builder-cms@sha256:451914dda9aa903d11c42e2a79161c64a0ce96a043b5bfddc3a511ff2bc92fbf | Docker Hub | Reviewed Strapi 5.56.0 image index; resolved Linux manifest 9aa6d2534898caa8b99118833f1a0ddb8495008d7fcb048545aa23d1707b19a7. |
 | Service identity | map-builder-cms-staging@atlas-project-509605.iam.gserviceaccount.com | IAM | Narrow Secret Manager access. |
 | Neon project | spring-meadow-23046405 | AWS ap-southeast-1 | Workspace linked to production; target staging. |
 | Neon branch | staging (br-shy-base-b3p0oqzf) | Child of production | public.strapi_migrations exists. |
@@ -40,3 +40,7 @@ Compose credentials are development-only.
 ## Out of scope
 
 Firestore and Functions are not configured as deployment targets. Unused local initialization scaffolds were removed from the repository workspace; `firebase.json` deploys Hosting only.
+
+## Dependency rollout recovery
+
+The previous Cloud Run revision `map-builder-cms-staging-00003-z86` and Hosting version `8db9b1e6cd0365fe` are retained. Fresh staging backup `br-long-hill-b3ej0r7q` has no compute; validation child `br-proud-mode-b31evd5z` expires on 2026-10-09T09:00:00Z. Candidate and previous CMS image both booted against the candidate-started validation data. This is dependency compatibility evidence, not pilot Draft/Published Version recovery acceptance. See [strapi-safe-upgrade.md](strapi-safe-upgrade.md) for versions, checks, limitations, and source identity.
