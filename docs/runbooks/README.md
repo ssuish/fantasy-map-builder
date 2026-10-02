@@ -8,6 +8,7 @@ These runbooks cover the current local environment and Phase 0 cloud staging. Pr
 - [staging-deployment.md](staging-deployment.md): Hosting, R2, Cloud Run, and Neon staging.
 - [inventory.md](inventory.md): resources, URLs, identities, and secret names.
 - [operations.md](operations.md): health checks, incident triage, and maintenance.
+- [strapi-safe-upgrade.md](strapi-safe-upgrade.md): dependency overrides, compatibility checks, and staging upgrade limits.
 
 ## Environment boundary
 

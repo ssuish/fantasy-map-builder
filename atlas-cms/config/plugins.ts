@@ -30,6 +30,11 @@ const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Plugin =>
       sessions: {
         httpOnly: true,
       },
+      ratelimit: {
+        enabled: true,
+        interval: 300_000,
+        max: 5,
+      },
     },
   },
   upload: {

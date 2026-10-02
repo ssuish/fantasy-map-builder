@@ -19,3 +19,9 @@ Current `atlas/` and `atlas-cms/` code, `CONTEXT.md`, ADRs 0001–0004, `docs/pr
 - Issue #19 remains open. Current production-scope audit reports 22 moderate and one high Vite entry. CI built and health-checked the CMS image from the cleaned lockfile; publishing its digest and checking the new image in staging remain open. Upload and email integration checks remain separate outstanding work.
 
 Before implementation, rerun `/grill-with-docs` against the then-current code and issue state. Resolve new contradictions rather than treating this dated interview as perpetual approval.
+
+## Dependency evidence update — 2026-10-02
+
+The dependency maintenance acceptance checks for issue #19 have now been exercised: Strapi 5.56.0 with reviewed runtime dependency versions, 23 CMS integration tests, final production image and PostgreSQL startup, isolated Neon candidate/previous-image compatibility, and staged Cloud Run/Firebase Hosting rollout. The fresh audit contains 21 package entries (3 high, 17 moderate, 1 low); runtime patches and residual development-tool exposure are documented in [strapi-safe-upgrade.md](../runbooks/strapi-safe-upgrade.md). The user accepted precise deployed mail delivery and durable R2 upload limitations for this dependency gate only. The live GitHub issue carries final closure status.
+
+Phase 1 remains not started. Its benchmark setup and the fresh readiness interview remain necessary before implementation; dependency verification does not establish terrain performance, Creator readiness, authentication acceptance, or pilot data recovery.

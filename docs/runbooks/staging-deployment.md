@@ -43,10 +43,10 @@ Private bucket `atlas-draft-private` has public access disabled and no custom do
 
 ## Cloud Run
 
-Service: map-builder-cms-staging; last verified revision: map-builder-cms-staging-00003-z86; image digest:
+Service: map-builder-cms-staging; last verified revision: map-builder-cms-staging-strapi556-20261002; image digest:
 
 ~~~text
-docker.io/adreanq/map-builder-cms@sha256:8b06a5132755f2b4520e6e06b3a89113ede5c8bc5c71fc72add97cbf0803d56e
+docker.io/adreanq/map-builder-cms@sha256:451914dda9aa903d11c42e2a79161c64a0ce96a043b5bfddc3a511ff2bc92fbf
 ~~~
 
 Build the image from repository root with `atlas-cms/Dockerfile`, publish it to the public `adreanq/map-builder-cms` Docker Hub repository, and pin the resulting digest before deployment. Preserve `HOST=0.0.0.0` and Cloud Run's injected `PORT`. Set `DATABASE_CLIENT=postgres`; inject these variables from Secret Manager at runtime through the dedicated service identity in [inventory.md](inventory.md):
@@ -82,3 +82,11 @@ HTTP health does not prove Neon connectivity; public.strapi_migrations is separa
 ## Rollback and production follow-up
 
 Restore an identified prior Hosting version through Firebase controls. Route Cloud Run traffic to a verified prior revision only after inspecting current traffic and validating gcloud help run services update-traffic. Keep immutable R2 prefixes. Production needs separate project/service/database/secrets, custom kofeejan.com domains, R2 custom domain/cache policy, budgets, backups, security headers, signed-operation tests, OAuth E2E, and reviewed rollback.
+
+## Dependency maintenance verification — 2026-10-02
+
+The Strapi 5.56.0 revision receives 100% of traffic after a no-traffic startup and explicit promotion. Runtime configuration, service identity, secret references, networking, and scaling matched the captured pre-deployment configuration. Public health/admin JavaScript returned 200; anonymous upload returned 403 and admin email returned 401. Explicit Neon staging inspection found zero application migration records and nine internal migration records, matching the isolated validation clone after candidate/previous-image startup. Health alone was not used as database evidence.
+
+Hosting version `2fe3d7ecf6e1d308` was deployed using the immutable R2 manifest above. Chromium at 1440×1000 and 390×844 rendered nonblank map artwork with manifest/image HTTP 200, correct MIME/CORS, and no console/page errors. Browser plugin was unavailable; regular Playwright supplied the evidence. This demo has no interactive editing controls.
+
+Rollback retains CMS revision `map-builder-cms-staging-00003-z86`, prior image digest `8b06a5132755f2b4520e6e06b3a89113ede5c8bc5c71fc72add97cbf0803d56e`, and Hosting version `8db9b1e6cd0365fe`. Validate installed leaf help and inspect current state before rollback. Database compatibility was exercised on an isolated clone; full pilot data restoration remains separate.
