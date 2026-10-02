@@ -31,6 +31,7 @@ COPY --from=builder --chown=node:node /workspace/atlas-cms/database ./atlas-cms/
 COPY --from=builder --chown=node:node /workspace/atlas-cms/dist ./atlas-cms/dist
 COPY --from=builder --chown=node:node /workspace/atlas-cms/public ./atlas-cms/public
 COPY --from=builder --chown=node:node /workspace/atlas-cms/src ./atlas-cms/src
+COPY --from=builder --chown=node:node /workspace/atlas-cms/scripts ./atlas-cms/scripts
 COPY --from=builder --chown=node:node /workspace/atlas-cms/types ./atlas-cms/types
 COPY --from=builder --chown=node:node /workspace/atlas-cms/package.json ./atlas-cms/package.json
 COPY --from=builder --chown=node:node /workspace/atlas-cms/tsconfig.json ./atlas-cms/tsconfig.json

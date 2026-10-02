@@ -1,0 +1,8 @@
+{
+  "name": "atlas-strapi-upload-compatibility-fixture",
+  "private": true,
+  "version": "0.0.0",
+  "dependencies": {
+    "@strapi/plugin-users-permissions": "5.56.0"
+  }
+}
