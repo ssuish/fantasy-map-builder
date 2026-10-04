@@ -58,6 +58,57 @@ it("commits complete candidate presentation and preserves session after Worker f
   engine.dispose();
 });
 
+it("cancels pending replacement without losing the current session", async () => {
+  const worker = new BrowserWorker();
+  const engine = new TerrainEngine(new WorkerTerrainBackend(() => worker));
+  const stage = async () => ({
+    commit: async () => {},
+    rollback: () => {},
+    finish: () => {},
+  });
+  const initial = engine.replace(
+    "blank",
+    DEFAULT_TERRAIN_SETTINGS,
+    false,
+    stage,
+  );
+  worker.reply({
+    id: worker.requests[0].id,
+    command: "create",
+    ok: true,
+    result: {
+      source: createTerrain("blank", DEFAULT_TERRAIN_SETTINGS),
+      tiles: [],
+      contours: false,
+    },
+  });
+  await initial;
+  const pending = engine.replace(
+    "blank",
+    { ...DEFAULT_TERRAIN_SETTINGS, seed: "cancelled" },
+    false,
+    stage,
+  );
+  const rejection = expect(pending).rejects.toThrow("superseded");
+  engine.cancelPending();
+  worker.reply({
+    id: worker.requests[1].id,
+    command: "create",
+    ok: true,
+    result: {
+      source: createTerrain("blank", {
+        ...DEFAULT_TERRAIN_SETTINGS,
+        seed: "cancelled",
+      }),
+      tiles: [],
+      contours: false,
+    },
+  });
+  await rejection;
+  expect(engine.current?.metadata.effectiveSeed).toBe("atlas");
+  engine.dispose();
+});
+
 it("preserves source fields while enabling contours and keeps previous state after failed derivation", async () => {
   const worker = new BrowserWorker();
   const engine = new TerrainEngine(new WorkerTerrainBackend(() => worker));

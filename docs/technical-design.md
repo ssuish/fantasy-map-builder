@@ -50,6 +50,10 @@ Worker creation transfers complete source and derived buffers back to the engine
 
 Color and optional contour textures contain a 256×256 interior plus one-sample gutters, producing 258×258 RGBA buffers. Gutters sample the same canonical wrapped/bounded neighbors as adjacent interiors. Coastline classification precedes mountain/snow classification; directional integer shading stays restrained. Contours mark neighboring changes between 4096-sample elevation bands. `affectedTileIndices` expands dirty sample bounds by two samples for derivation neighbors and texture gutters, including wrapped and diagonal tiles; selected derivation computes only the requested unique tiles. Brush mutation and latency integration remain #3 work.
 
+The WebGL viewport crops texture gutters to the 256×256 interior and reuses each texture across horizontal presentation copies. Copy coverage expands for the current fit span and viewport aspect ratio. Navigation keeps a continuous wrapped horizontal center, clamps the visible vertical extent, and uses fit scale through eight CSS pixels per source sample. Resize preserves the navigation center and supported zoom. Pointer/wheel handlers stay on the canvas; Space respects focused controls and editable content.
+
+Preparation renders into a temporary RenderTexture rather than the live canvas. Commit renders the complete candidate and waits for the next animation-frame opportunity before acknowledging readiness. Pending ownership remains tracked until the engine acknowledges success. Cancellation or failed/superseded presentation restores the previous scene if that transaction still owns the visible scene. The animation-frame boundary is a scheduling proxy, not physical scanout evidence; software-rendered browser checks establish transaction correctness only.
+
 ## Creation and failure boundaries
 
 Initialize complete candidate state before committing Session Replacement. A confirmed discard authorizes replacement only on success; cancellation or Worker/allocation failure leaves current fields/art intact and offers retry with the same settings. Do not implement this as durable Map regeneration.

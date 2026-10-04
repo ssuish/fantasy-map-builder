@@ -8,6 +8,6 @@ export default defineConfig(({ mode }) => ({
       : undefined,
   server: {
     port: 8080,
-    open: true,
+    open: process.env.ATLAS_IGNORE_ENV_FILES !== "1",
   },
 }));

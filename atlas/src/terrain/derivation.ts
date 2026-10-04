@@ -118,9 +118,12 @@ function deriveTile(
   const contours = includeContours ? new Uint8Array(TEXTURE_LENGTH) : undefined;
 
   for (let outputY = 0; outputY < TEXTURE_SIZE; outputY += 1) {
-    const worldY = row * TILE_SIZE + outputY - 1;
+    const worldY = clampCoordinate(row * TILE_SIZE + outputY - 1, MAP_HEIGHT);
     for (let outputX = 0; outputX < TEXTURE_SIZE; outputX += 1) {
-      const worldX = column * TILE_SIZE + outputX - 1;
+      const worldX = wrapCoordinate(
+        column * TILE_SIZE + outputX - 1,
+        MAP_WIDTH,
+      );
       const sample = sampleAt(source, worldX, worldY);
       const offset = (outputY * TEXTURE_SIZE + outputX) * 4;
       const color = deriveColor(source, worldX, worldY, sample);

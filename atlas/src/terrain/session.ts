@@ -110,6 +110,10 @@ export class TerrainEngine {
       throw new Error("Terrain operation was superseded.");
   }
 
+  cancelPending(): void {
+    this.revision += 1;
+  }
+
   dispose(): void {
     this.revision += 1;
     this.backend.dispose();
