@@ -4,7 +4,7 @@ This document owns technical responsibilities and confirmed Phase 1 representati
 
 ## Current and planned interfaces
 
-The implemented shared contract is `StaticMapManifest`, parsed through `@atlas/contracts`; it describes the fixed demo image, not editable state or a future release schema. The frontend currently renders that image; the CMS has health and dependency-maintenance integration coverage. Terrain, Canvas Document, ownership, Draft, and publication application interfaces remain to be implemented.
+The implemented shared contract is `StaticMapManifest`, parsed through `@atlas/contracts`; it describes the fixed demo image, not editable state or a future release schema. App-local terrain source kernels, CPU derivation, Worker commands, and an in-memory Terrain Engine are implemented. The root frontend still renders the static image until the editor composition slice; the CMS has health and dependency-maintenance integration coverage. Canvas Document, ownership, Draft, and publication application interfaces remain to be implemented.
 
 Keep React responsible for accessible controls, dialogs, routing, and coarse editor state. PixiJS owns high-frequency viewport presentation. A Terrain Engine owns source buffers and derivation behind commands; keep individual pointer samples out of React state. Prefer pure kernels and a Web Worker for generation/derivation, exposing dirty results rather than duplicating authoritative buffers in callers. This is a module seam, not a requirement to build a general framework.
 
@@ -41,6 +41,14 @@ Normalize text seeds with Unicode NFC and trim surrounding whitespace. An empty 
 The initial editor route is `/editor` and creates no session until the user chooses Blank or Generated Terrain and submits the form. The static root demo continues to use `StaticMapManifest`. These terrain interfaces remain app-local until another consumer requires an approved shared contract.
 
 The source kernel's initial output version is `terrain-v1`. Seed conversion is unsigned 32-bit FNV-1a over UTF-8 bytes of the version, a NUL separator, and the normalized seed. Generation uses six smooth fixed-point value-noise octaves, beginning with an 8×4 lattice and doubling its dimensions each octave. Horizontal lattice lookup is periodic; vertical lookup is bounded. Elevation and climate use independent hashed channels. Roughness controls octave persistence; temperature also includes a north/south latitude profile. Sea level changes classification metadata rather than regenerating elevation values. Fixed-point interpolation and explicit rounding keep source arithmetic reproducible between supported browsers.
+
+### Engine and presentation seam
+
+`TerrainEngine` retains authoritative source fields and exposes a presentation snapshot containing generation metadata, derived tiles, and the contour setting. It does not expose editable source buffers to React or PixiJS. `replace`, `setContours`, and `recover` stage complete presentation candidates through a narrow transaction with commit, rollback, and successful-cleanup steps. Failed preparation or presentation leaves the active fields unchanged; superseded results cannot overwrite newer operations. Presentation cleanup must not throw, and rollback must not replace a newer scene.
+
+Worker creation transfers complete source and derived buffers back to the engine. Subsequent derivation sends a transient copy rather than detaching active source buffers. Worker error, message decoding error, or the 30-second watchdog rejects pending work and releases that Worker; retry constructs a new one. This watchdog is a terminal-work safeguard, not a relaxation of the three-second performance budget.
+
+Color and optional contour textures contain a 256×256 interior plus one-sample gutters, producing 258×258 RGBA buffers. Gutters sample the same canonical wrapped/bounded neighbors as adjacent interiors. Coastline classification precedes mountain/snow classification; directional integer shading stays restrained. Contours mark neighboring changes between 4096-sample elevation bands. `affectedTileIndices` expands dirty sample bounds by two samples for derivation neighbors and texture gutters, including wrapped and diagonal tiles; selected derivation computes only the requested unique tiles. Brush mutation and latency integration remain #3 work.
 
 ## Creation and failure boundaries
 
