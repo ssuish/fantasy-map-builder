@@ -4,7 +4,7 @@ This document owns technical responsibilities and confirmed Phase 1 representati
 
 ## Current and planned interfaces
 
-The implemented shared contract is `StaticMapManifest`, parsed through `@atlas/contracts`; it describes the fixed demo image, not editable state or a future release schema. App-local terrain source kernels, CPU derivation, Worker commands, and an in-memory Terrain Engine are implemented. The root frontend still renders the static image until the editor composition slice; the CMS has health and dependency-maintenance integration coverage. Canvas Document, ownership, Draft, and publication application interfaces remain to be implemented.
+The implemented shared contract is `StaticMapManifest`, parsed through `@atlas/contracts`; it describes the fixed demo image, not editable state or a future release schema. App-local terrain source kernels, CPU derivation, Worker commands, an in-memory Terrain Engine, and the `/editor` creation/navigation interface are implemented. The root frontend retains the static image demo; the CMS has health and dependency-maintenance integration coverage. Canvas Document, ownership, Draft, and publication application interfaces remain to be implemented.
 
 Keep React responsible for accessible controls, dialogs, routing, and coarse editor state. PixiJS owns high-frequency viewport presentation. A Terrain Engine owns source buffers and derivation behind commands; keep individual pointer samples out of React state. Prefer pure kernels and a Web Worker for generation/derivation, exposing dirty results rather than duplicating authoritative buffers in callers. This is a module seam, not a requirement to build a general framework.
 
@@ -59,6 +59,10 @@ Preparation renders into a temporary RenderTexture rather than the live canvas. 
 Initialize complete candidate state before committing Session Replacement. A confirmed discard authorizes replacement only on success; cancellation or Worker/allocation failure leaves current fields/art intact and offers retry with the same settings. Do not implement this as durable Map regeneration.
 
 Test recoverable context loss by reconstructing derived rendering from authoritative in-memory fields. Record supported recovery cases and an actionable terminal fallback. Refresh still discards session content; later Draft restore and pilot backup recovery are separate obligations.
+
+The editor attempts one automatic WebGL renderer rebuild per loss episode, within a 10-second deadline. Recovery cancels uncommitted terrain operations before rebuilding, derives fresh presentation from retained fields, preserves navigation and contours, and leaves input disabled until successful presentation. A repeated loss during recovery or deadline failure enters a terminal UI state with explicit renderer retry; further loss events do not start another automatic attempt. The tested recovery mechanism is renderer recreation after WebGL context loss, not a WebGPU/Canvas fallback or recovery after page termination. Pixi auto-density owns integer CSS canvas sizing consistently through initialization, resize, and rebuild to avoid fractional resampling changes.
+
+Generation diagnostics start at the final creation submission, excluding time spent choosing settings or confirming replacement. They end after the complete scene, navigation input, React controls, dialog closure, and final canvas layout reach the ready state at an animation-frame opportunity. Failure uses a separate measure. Contour changes and graphics recovery do not manufacture generation samples. These browser scheduling observations still do not prove physical display scanout.
 
 ## Correctness and performance evidence
 
