@@ -4,7 +4,9 @@ This roadmap sequences the current [product specification](product-spec.md) and 
 
 ## Current handoff
 
-As of the confirmed 2026-10-04 handoff: Phase 0 is a static staging prototype; #19 dependency maintenance and #27 readiness decisions are closed. Terrain/editor features remain unimplemented. #2 is the next implementation target; #3 depends on it. The owner authorized documentation/harness preparation only: a separate request starts feature implementation. Recheck live issues and code before using this snapshot.
+As of the confirmed 2026-10-04 handoff: Phase 0 is a static staging prototype; #19 dependency maintenance and #27 readiness decisions are closed. On 2026-10-05 the owner approved a five-PR stack for #2 and requested implementation. #3 depends on its terrain and viewport interfaces. Recheck live issues and code before using this snapshot.
+
+The authorized #2 editor lives at `/editor`, preserving the root static demo. The first feature PR targets `phase-1`; subsequent PRs target their predecessor and remain open for review. The owner excluded all provider actions. Firebase preview deployment is therefore limited to PRs targeting `stage`; feature-stack publication does not authorize deployment or a push to `stage`. Visual review and final hardware performance remain separate acceptance gates.
 
 [Phase 1 decisions](agents/phase-1-decisions.md) preserve owner confirmation and risk ownership. Fixed measurement counts are settled; only final performance baseline provision/choice is deferred to final QA preparation. This deferral does not block implementation, but does block performance sign-off and pilot release (#24).
 
@@ -13,7 +15,7 @@ As of the confirmed 2026-10-04 handoff: Phase 0 is a static staging prototype; #
 | Order | Issues | Deliverable and prerequisite |
 |---|---|---|
 | Completed prerequisite | #19 | Dependency maintenance with explicitly limited upload/mail evidence; not pilot acceptance. |
-| Next | #2 | Blank/generated in-memory terrain, deterministic derivation, viewport, contours, session replacement/recovery. Separate feature authorization first. |
+| In progress | #2 | Authorized blank/generated in-memory terrain, deterministic derivation, viewport, contours, session replacement/recovery. Five dependent PRs against `phase-1`. |
 | Then | #3 | Target-value Brushes, fixed map-space sampling/radius limits, continuous seams, dirty-neighbor updates, per-sample visibility. Uses #2 interfaces. |
 | Then | #4, reduced #6 | Freehand Drawing, basic road/river Feature Strokes, fixed layers and session undo/redo. Remain in memory; #5 Symbol Stamps is deferred. |
 | Contract gate | Before persistence | Confirm retained Canvas Document/release boundaries; source state has no rendering duplicates. |
