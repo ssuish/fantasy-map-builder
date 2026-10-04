@@ -1,6 +1,6 @@
 # Phase 0 progress
 
-Last reviewed: 2026-09-28. Check completed items against the current Git state before reusing their evidence. The ignored `build-logs/build-log.md` records local phase evidence; task receipts are historical unless their Git HEAD and working-tree fingerprint match the current state. The `build-logs/phase-zero-r2-cloud-run/STATUS.md` receipt passed lint, typecheck, tests, and builds at its recorded commit.
+Last reviewed: 2026-09-28. Check completed items against the current Git state before reusing their evidence. The ignored `build-logs/build-log.md` contains historical local entries; its old summary tables are frozen provenance. Task receipts are historical unless their Git HEAD and working-tree fingerprint match the current state. Current receipts follow [verification](verification.md). The `build-logs/phase-zero-r2-cloud-run/STATUS.md` receipt passed lint, typecheck, tests, and builds at its recorded commit.
 
 ## Local foundation
 

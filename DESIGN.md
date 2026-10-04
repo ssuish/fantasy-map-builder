@@ -106,9 +106,11 @@ components:
 
 # Atlas Dark Archive
 
+Apply these tokens to retained pilot screens from [the product specification](docs/product-spec.md). They do not authorize deferred content surfaces or establish terrain-image acceptance.
+
 ## Overview
 
-Atlas should feel like a carefully maintained archive of invented worlds: atmospheric, legible, and restrained. Dark surfaces recede so hand-drawn terrain and Lore lead. Brass marks primary actions and selected locations; it is not a decorative border on every panel. This is the target system for future Creator and Explorer screens. The Phase 0 preview uses an earlier prototype style and is not a token implementation.
+Atlas should feel like a carefully maintained archive of invented worlds: atmospheric, legible, and restrained. Dark surfaces recede so hand-drawn terrain leads. Brass marks primary actions and selected locations; it is not a decorative border on every panel. This is the target system for future Creator and Explorer screens. The Phase 0 preview uses an earlier prototype style and is not a token implementation.
 
 Creator and Explorer share these tokens. Creator surfaces can be denser, with persistent tools and visible save state. Explorer surfaces should give more space to the Map and use fewer controls. Neither mode changes the meaning of a color or typography token.
 
@@ -120,13 +122,13 @@ Normal text on the background, muted text on the surface, and dark text on the p
 
 ## Typography
 
-Literata gives titles and Lore headings an editorial, book-like voice. Source Sans 3 keeps controls, long reading, and dense editor labels clear. Reserve the serif for headings and short narrative moments; do not use it for coordinates, forms, or small tool labels. Long Lore passages use the `body` line height and a comfortable reading width.
+Literata gives Map titles and headings an editorial, book-like voice. Source Sans 3 keeps controls, long reading, and dense editor labels clear. Reserve the serif for headings and short narrative moments; do not use it for coordinates, forms, or small tool labels. Long text passages use the `body` line height and a comfortable reading width.
 
 ## Layout
 
-Use the spacing scale consistently. On desktop, the Creator editor gives the Map the largest region, with a compact tool rail and contextual inspector. Explorer pages keep navigation and Lore panels secondary to the Map. On phones, stack panels instead of shrinking controls; Explorer remains fully usable, while touch-first Creator editing is outside the MVP.
+Use the spacing scale consistently. On desktop, the Creator editor gives the Map the largest region, with a compact tool rail and contextual inspector. Explorer pages keep navigation and controls secondary to the Map. On phones, stack panels instead of shrinking controls; Explorer remains fully usable, while touch-first Creator editing is outside the pilot.
 
-Target at least 44×44 px touch targets for Explorer controls. Preserve text zoom and keyboard access. Panels should not cover selected Hotspots or block the only exit from a Lore view.
+Target at least 44×44 px touch targets for Explorer controls. Preserve text zoom and keyboard access. Panels preserve the current editing area and a visible way to dismiss overlays.
 
 ## Elevation & Depth
 
@@ -140,13 +142,13 @@ Small radii make controls approachable without turning the archive into a playfu
 
 Use one primary action per view. Secondary actions use surface treatment; destructive actions need explicit text and confirmation. Inputs always have visible labels and error/help text. Map overlays use opaque enough surfaces for contrast, show keyboard focus, and keep the selected location identifiable after the panel opens. Save status must be communicated by text as well as any indicator.
 
-Component tokens set default surfaces and type. Implement hover, focus, disabled, loading, and error states with the same semantic palette before a component is considered complete. The map canvas and Lore panel require DOM alternatives for information that cannot be read from pixels alone.
+Component tokens set default surfaces and type. Implement hover, focus, disabled, loading, and error states with the same semantic palette before a component is considered complete. Provide DOM alternatives for essential map state and controls that cannot be read from pixels alone.
 
 ## Do's and Don'ts
 
 - Do keep fantasy detail in map art and editorial content; keep controls calm and direct.
 - Do distinguish selected, hovered, focused, disabled, and dangerous states with more than color.
 - Do keep Creator tools dense but labeled; give Explorer more map space and simpler navigation.
-- Don't expose raw map coordinates as the only way to identify a Point of Interest.
+- Use clear labels for Map controls and state rather than coordinates alone.
 - Don't place low-opacity text directly on variable map artwork.
 - Don't copy Phase 0 prototype colors into new screens without mapping them to these tokens.

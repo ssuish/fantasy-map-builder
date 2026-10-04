@@ -1,85 +1,19 @@
 # Fantasy Map Builder
 
-Fantasy Map Builder is a web application for creating and publishing interactive 2D fantasy worlds. Creators can generate or paint terrain, add hand-drawn map features, connect locations to rich Lore, and publish the complete world at a shareable URL.
+Fantasy Map Builder's private pilot lets invited Creators make one Map, save a private Draft, and explicitly publish or republish it to a stable URL. Anonymous Explorers view and navigate the Published Version. See the [current product specification](docs/product-spec.md) for retained capabilities and exclusions.
 
-Phase 0 staging prototype is live: a React/PixiJS read-only map on Firebase Hosting, public R2 assets, and a Strapi health service on Cloud Run connected to Neon staging. The full editor and publication journey remain planned work.
+The implemented prototype is a static React/PixiJS map served through Firebase Hosting and public R2, with Strapi health on Cloud Run and Neon staging. Editor, ownership, persistence, and publication application flows remain planned. [Architecture](ARCHITECTURE.md) distinguishes current behavior from the target; [implementation plan](docs/implementation-plan.md) records delivery gates.
 
-## MVP capabilities
+## Repository and setup
 
-- Create a fixed 2048×1024 map with seamless horizontal wrapping.
-- Start from blank terrain or a deterministic procedural generator.
-- Paint elevation, temperature, and moisture as smooth raster fields.
-- Derive land, water, coastlines, biomes, hill-shading, and optional contours.
-- Draw freehand artwork, roads, and rivers.
-- Place built-in fantasy Symbol Stamps for cities, trees, mountains, and landmarks.
-- Add interactive Hotspots with summaries and linked Lore Entries.
-- Author rich Lore with images, tags, and links between entries.
-- Autosave a private Draft and publish the entire map as one coherent version.
-- Share maps publicly or through an unlisted URL.
-- Let anonymous Explorers pan, zoom, search, inspect Points of Interest, and read Lore.
+The root npm workspace contains `atlas/`, `atlas-cms/`, and `packages/contracts/`, using one root lockfile. Run commands from the repository root. Start with [local development](docs/runbooks/local-development.md) for Node/Docker setup and services; inspect package scripts for current commands.
 
-## Technology
+## Documentation and tooling
 
-- React and TypeScript for the application interface.
-- PixiJS for GPU-accelerated map rendering and interaction.
-- Strapi for content management, custom backend workflows, and Google OAuth.
-- Neon PostgreSQL for relational data and search projections.
-- Cloudflare R2 for private Draft assets and immutable public releases.
-- Firebase Hosting for the static web application.
-- Google Cloud Run for the Strapi container.
+- [Documentation index](docs/README.md): canonical product, technical/data design, architecture, domain language, decisions, and operations.
+- [Agent workflow](docs/agents/workflow.md): planning interviews, bounded delegation, coherent micro commits, and completion.
+- [Exploration](docs/agents/exploration.md): file/text discovery and Node tree-sitter structure.
+- [Verification](docs/agents/verification.md): independent task receipts and evidence limits.
+- [Local history](docs/agents/build-log-template.md): structured milestone appends, separate from verification.
 
-## Core product boundaries
-
-- Each map has one authenticated Creator; collaboration is outside the MVP.
-- Explorers are anonymous and read-only.
-- Terrain uses a static model rather than dynamic weather, erosion, hydrology, or seasons.
-- Biomes and coastlines are derived; fantasy artwork remains unconstrained.
-- Draft and Published Version are the only user-visible states. There is no version history.
-- Creator editing targets desktop and laptop browsers. Touch-first editing is deferred.
-- The MVP is web-only and does not provide image, print, or project-file export.
-
-## Documentation
-
-- [Documentation index](docs/README.md)
-- [Product specification](docs/product-spec.md)
-- [Technical design](docs/technical-design.md)
-- [Data model](docs/data-model.md)
-- [Implementation plan](docs/implementation-plan.md)
-- [Domain glossary](CONTEXT.md)
-- [Architecture overview](ARCHITECTURE.md)
-- [Design overview](DESIGN.md)
-- [Architecture decisions](docs/adr/)
-- [Local and staging runbooks](docs/runbooks/README.md)
-- [Local Codex setup](docs/agents/codex-setup.md)
-
-## Repository
-
-```text
-atlas/                 React, PixiJS, and Vite frontend
-atlas-cms/             Strapi backend and container
-packages/
-  contracts/           Shared static-map manifest contract
-docs/                  Product and engineering documentation
-compose.yaml           Local CMS, PostgreSQL, and object store
-firebase.json         Staging Firebase Hosting configuration
-```
-
-The root uses npm workspaces and one `package-lock.json`. Other shared packages from the technical design will be added when their features begin.
-
-## Local setup
-
-Use Node 24 and Docker. From the repository root:
-
-```sh
-npm ci
-npm run dev:web
-npm run dev:cms
-npm run lint
-npm run typecheck
-npm test
-npm run build
-npm run verify -- --task local
-```
-
-`docker compose up --build` runs the CMS with local PostgreSQL and S3-compatible storage. Development-only credentials in Compose are not for staging. Keep real credentials in ignored local environment files, never in source or logs.
-
+Keep credentials in the existing private configuration/secret-store path, never in source, docs, or logs. The private pilot is not a public production launch.

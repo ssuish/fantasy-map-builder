@@ -1,25 +1,29 @@
-# Local build log
+# Local milestone history
 
-`npm run verify -- --task <task-slug>` writes the latest command receipt to the Git-ignored `docs/agents/build-logs/<task-slug>/STATUS.md` file and appends a verification activity entry to the canonical `docs/agents/build-logs/build-log.md`.
+Read this procedure after resolving a material scope/decision/architecture change or reaching an implementation task milestone, and when correcting earlier history. The ignored `docs/agents/build-logs/build-log.md` is append-only local provenance. Current product/design docs and live GitHub issues own requirements and status; receipts independently own check results.
 
-The Phase 0–6 names are historical labels from the broader MVP plan. Use `--phase <0-6>` only when the task genuinely matches a retained phase; otherwise omit it. The first-release scope and gates are in [private-pilot-scope.md](private-pilot-scope.md). The verifier never changes a phase status from a task receipt or from passing local checks.
+## Append a milestone
 
-## Canonical log
+1. Prepare sanitized structured JSON outside private configuration. Include a stable event ID, category, concise summary, and useful evidence references. Optional details explain trade-offs, failures, or limitations; omit raw application logs and unnecessary personal data.
+2. Run `npm run log:change -- --input <event.json>` from the repository root. Inspect the success/error result. The script supplies UTC time, Git HEAD, branch, and dirty-state metadata and formats the append consistently.
+3. Link the canonical changed doc, relevant issue/commit, or verification receipt. Finish when the milestone was appended exactly once or its write failure is explicitly reported.
 
-`build-log.md` is the local source of truth for observed phase progress and verification evidence. It contains:
+```json
+{
+  "id": "agent-docs-harness-complete",
+  "kind": "implementation",
+  "summary": "Separated verification receipts from local milestone history.",
+  "details": ["No feature implementation or hardware acceptance is claimed."],
+  "references": ["scripts/verify.mjs", "docs/agents/verification/agent-docs-harness/STATUS.md"]
+}
+```
 
-- A current Phase 0–6 summary table with only `Not started`, `In progress`, `Blocked`, or `Complete` statuses.
-- A separate task receipt table preserving historical `STATUS.md` evidence without treating task results as phase completion. A `passed` result is historical, not a freshness claim; inspect that receipt's HEAD and fingerprint before reuse.
-- Append-only activity entries with the observed branch, exact checks and exit codes, skipped checks, limitations, blockers, and evidence paths.
+Categories are `scope`, `decision`, `architecture`, `implementation`, and `correction`. Record task milestones rather than every inspection, check, or micro commit. Include material failed/abandoned outcomes when they affect the task handoff. IDs identify events independently of timestamps and commit count.
 
-Phase 0 is complete only because issue #1, the Phase 0 checklist, CI, Hosting, Cloud Run, and private R2 denial evidence support its acceptance. Later phase rows remain `Not started` until their own acceptance evidence is observed. Former Phase 4 Lore and Phase 6 public-launch work are outside the pilot; do not treat those rows as pilot gates. The pilot's final deployed and recovery gate is issue #24. Planned scope and passing local checks do not establish phase completion.
+## Corrections and contention
 
-## Corrections and freshness
+A correction uses a new ID, `kind: "correction"`, and `corrects` naming an existing event ID. For a legacy entry without an event ID, add a new milestone identifying the historical heading in its details and explaining the corrected observation. Preserve the earlier bytes.
 
-Never silently rewrite an activity entry or remove a failed attempt. Append a correction entry naming the exact entry being corrected, explain the changed observation, cite the new evidence, and update the phase summary to the current supported status. Routine typo fixes may be made in place when meaning does not change.
+The script validates input before append and rejects duplicate IDs, unknown fields, invalid correction targets, and concurrent lock contention. Retry a contended write after the other writer finishes; inspect a leftover lock before removing it after a confirmed interrupted process. History failure never blocks unrelated verification.
 
-Receipt evidence is valid only while its Git HEAD and working-tree fingerprint match. The fingerprint includes staged and unstaged diffs plus content hashes for safe untracked files. `.env` variants and `CREDENTIALS` files are stat-only and never read for hashing. The verifier validates the canonical log before checks and again before writing a receipt; malformed logs fail closed and remain untouched. CI, deployment, review, recovery, and external system evidence must be recorded by their owning systems or procedures.
-
-## Secret and output handling
-
-The verifier records system metadata, hashes, command names, exit codes, durations, and concise evidence references only. It omits arbitrary `--progress` and `--next` text, environment values, credentials, tokens, and raw command output from receipts and the canonical log. Do not manually add secrets or unnecessary personal information to ignored logs.
+Legacy phase/receipt tables are frozen history, not current summaries. Preserve the existing log and historical receipts; never manually rewrite tables or entries. New logs contain milestones only. Local history is not transferred by Git and is never required by the agent harness or CI. No history entry grants scope approval or proves acceptance.
