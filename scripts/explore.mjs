@@ -7,7 +7,7 @@ import {
   readdirSync,
   realpathSync,
 } from "node:fs";
-import { extname, join, relative, resolve } from "node:path";
+import { dirname, extname, join, relative, resolve } from "node:path";
 
 const require = createRequire(import.meta.url);
 const Parser = require("tree-sitter");
@@ -41,7 +41,11 @@ const ensureInside = (absolute, label, allowRoot = false) => {
   return rel;
 };
 const ensureNoSymlink = (absolute, label) => {
-  if (lstatSync(absolute).isSymbolicLink()) throw new Error(label + " may not be a symlink");
+  let current = absolute;
+  while (current !== dirname(current)) {
+    if (existsSync(current) && lstatSync(current).isSymbolicLink()) throw new Error(label + " may not be a symlink or symlink ancestor");
+    current = dirname(current);
+  }
   const real = realpathSync(absolute);
   const rel = relative(root, real);
   if (rel.startsWith("..")) throw new Error(label + " may not escape the repository through a symlink");
@@ -60,6 +64,7 @@ const collect = (input) => {
   ensureNoSymlink(absolute, "input path");
   const info = lstatSync(absolute);
   if (info.isFile()) {
+    if (shouldSkipDirectory(dirname(absolute))) throw new Error("input path is inside an ignored directory: " + input);
     if (!extensions.has(extname(absolute).toLowerCase())) throw new Error("unsupported source extension: " + input);
     return [absolute];
   }
@@ -106,6 +111,7 @@ if (queryPath !== undefined) {
   ensureInside(queryPath, "query path");
   if (!existsSync(queryPath)) throw new Error("query path does not exist");
   ensureNoSymlink(queryPath, "query path");
+  if (shouldSkipDirectory(dirname(queryPath))) throw new Error("query path is inside an ignored directory");
   if (!lstatSync(queryPath).isFile() || extname(queryPath).toLowerCase() !== ".scm") throw new Error("query path must be a .scm file");
   querySource = readFileSync(queryPath, "utf8");
   if (querySource.length > 200_000) throw new Error("query file exceeds 200000 characters");

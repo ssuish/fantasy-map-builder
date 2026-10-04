@@ -68,7 +68,7 @@ test("verifier fails fast, records skipped checks, and writes the new receipt pa
 test("retired phase and caller-text flags fail before any check", (t) => {
   const fixture = createFixture();
   t.after(fixture.cleanup);
-  for (const args of [["--task", "retired", "--phase", "1"], ["--task", "retired", "--progress", "x"], ["--task", "retired", "--next", "y"]]) {
+  for (const args of [["--task", "retired", "--phase", "1"], ["--task", "retired", "--phase=1"], ["--task", "retired", "--progress", "x"], ["--task", "retired", "--next", "y"]]) {
     const result = run(fixture, args);
     assert.equal(result.status, 1);
     assert.match(result.stderr, /was retired/);
@@ -120,4 +120,17 @@ test("symlinked receipt directory is rejected before checks", (t) => {
   assert.equal(calls(fixture), "");
   assert.equal(lstatSync(join(fixture.root, "docs", "agents", "verification")).isSymbolicLink(), true);
   rmSync(outside, { recursive: true, force: true });
+});
+
+test("tracked private paths do not enter the fingerprint diff", (t) => {
+  const fixture = createFixture();
+  t.after(fixture.cleanup);
+  const privatePath = join(fixture.root, ".env.tracked");
+  writeFileSync(privatePath, "PRIVATE_TRACKED_ONE");
+  git(fixture.root, ["add", privatePath]);
+  git(fixture.root, ["commit", "-m", "private fixture"]);
+  writeFileSync(privatePath, "PRIVATE_TRACKED_TWO");
+  const result = run(fixture, ["--task", "tracked-private"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(readFileSync(receiptPath(fixture, "tracked-private"), "utf8").includes("PRIVATE_TRACKED"), false);
 });

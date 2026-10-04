@@ -28,7 +28,7 @@ const readOption = (name, fallback = undefined) => {
 };
 
 for (const retired of ["--phase", "--progress", "--next"]) {
-  if (args.includes(retired)) {
+  if (args.some((arg) => arg === retired || arg.startsWith(retired + "="))) {
     throw new Error(retired + " was retired: run npm run verify -- --task <slug>; record scope or decisions with npm run log:change -- --input <file>");
   }
 }
@@ -83,7 +83,7 @@ const safeGitDiff = (staged) => {
     maxBuffer: 20 * 1024 * 1024,
   }).toString("utf8").split("\0").filter(Boolean);
   return names.filter((name) => !isPrivatePath(name)).map((name) =>
-    execFileSync("git", ["diff", ...(staged ? ["--cached"] : []), "--binary", "--", name], {
+    execFileSync("git", ["diff", ...(staged ? ["--cached"] : []), "--binary", "--", ":(literal)" + name], {
       cwd: root,
       encoding: "buffer",
       maxBuffer: 20 * 1024 * 1024,
