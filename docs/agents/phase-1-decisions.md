@@ -59,3 +59,16 @@ No harness code changed during this preparation. Required future work belongs to
 Issue #19 is closed. The next implementation target is #2; #3 depends on its terrain/viewport interfaces. Both remain planned because the owner authorized preparation only. A separate request is required to start feature implementation. Exact radius limits, seed normalization, representative cases, visual tolerance, and tested context-recovery limits are bounded engineering choices to document during implementation, not additional product modes.
 
 Closing #27 records this confirmed agreement, updated issue contracts, risks, and preparation evidence. It does not close #2/#3 or establish pilot acceptance. The baseline deferral must remain visible in #24 until final QA resolves it.
+
+## Subsequent implementation authorization — 2026-10-05
+
+The owner approved the consolidated #2 implementation plan and then explicitly requested implementation. This supersedes the preparation-only authorization above without changing the original #27 decision record.
+
+- Add `/editor` with an explicit initial creation form; preserve the static demo at `/`.
+- Deliver five dependent feature PRs: source/generation, derivation/Worker, viewport, editor/recovery, and browser/measurement evidence. The first targets `phase-1`; later PRs target their predecessor. Leave the stack open.
+- Delegate bounded module work to Luna workers; the primary agent retains architecture, integration, verification, commits, and publication responsibilities.
+- Use TDD at Terrain Engine commands, Session Replacement controller, viewport transforms, and the rendered editor journey.
+- Support bounded WebGL recovery from retained source fields: one automatic attempt within 10 seconds, followed by actionable explicit renderer retry. Preserve the viewport and contour setting.
+- Perform no provider actions. Before opening feature PRs, limit the existing Firebase preview workflow to PRs targeting `stage`. GitHub branch/PR publication is authorized, but no deployment, remote application-data access, provider configuration, or `stage` push is authorized.
+
+The owner also confirmed the creation defaults and seed policy recorded in technical design. Visual acceptance still requires owner screenshot review, and final hardware performance remains pending under #24.

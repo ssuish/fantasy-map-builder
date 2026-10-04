@@ -32,6 +32,14 @@ Retained persistence/publication boundaries follow ADRs 0001–0004 and the pilo
 
 DOM controls and Pixi input use the same coordinate transform. Space/panning must not paint or intercept typing. Contour toggle defaults off; verify updates and continuity with it on. Review fixed-seed output using the agreed readable palette; screenshot tolerance is narrow and documented for GPU presentation differences.
 
+### Issue #2 creation defaults
+
+The owner confirmed these engineering defaults on 2026-10-05. Creation controls use integer percentages: sea level 0–99; roughness and both Climate Targets 0–100. All numeric controls initially use 50. Convert sea level to a normalized Uint16 threshold by rounding `percentage × 65535 / 100`. Blank elevation is uniformly `max(49152, normalizedSeaLevel + 1)`; temperature and moisture are uniformly 128, independently of generated-terrain Climate Targets.
+
+Normalize text seeds with Unicode NFC and trim surrounding whitespace. An empty normalized seed becomes `atlas`. Display the effective seed and preserve it when other controls change. Random seed selection uses browser cryptographic randomness. Seed conversion and procedural generation are versioned together with derivation under ADR 0005; their exact implemented arithmetic belongs alongside the generator and its compatibility fixtures.
+
+The initial editor route is `/editor` and creates no session until the user chooses Blank or Generated Terrain and submits the form. The static root demo continues to use `StaticMapManifest`. These terrain interfaces remain app-local until another consumer requires an approved shared contract.
+
 ## Creation and failure boundaries
 
 Initialize complete candidate state before committing Session Replacement. A confirmed discard authorizes replacement only on success; cancellation or Worker/allocation failure leaves current fields/art intact and offers retry with the same settings. Do not implement this as durable Map regeneration.
