@@ -18,10 +18,15 @@
     "test": "npm run test:harness && npm run build -w @atlas/contracts && npm run test --workspaces --if-present",
     "build": "npm run build -w @atlas/contracts && npm run build -w atlas && npm run build -w atlas-cms",
     "verify": "node scripts/verify.mjs",
-    "test:harness": "node --test scripts/verify.test.mjs"
+    "log:change": "node scripts/log-change.mjs",
+    "explore": "node scripts/explore.mjs",
+    "test:harness": "node --test scripts/*.test.mjs"
   },
   "devDependencies": {
     "@neon/config": "^1.7.3",
+    "tree-sitter": "0.21.1",
+    "tree-sitter-javascript": "0.21.4",
+    "tree-sitter-typescript": "0.21.2",
     "typescript": "~5.7.3"
   },
   "overrides": {
