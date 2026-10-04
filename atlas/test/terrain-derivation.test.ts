@@ -74,6 +74,23 @@ function planarSource(slopeX: number, slopeY: number): TerrainSource {
 }
 
 describe("terrain derivation", () => {
+  it("repeats bounded edge derivation in north and south texture gutters", () => {
+    const source = sourceWith(40_000);
+    source.elevation.fill(44_000, MAP_WIDTH, MAP_WIDTH * 2);
+    source.elevation.fill(
+      44_000,
+      MAP_WIDTH * (MAP_HEIGHT - 2),
+      MAP_WIDTH * (MAP_HEIGHT - 1),
+    );
+    const [north, south] = deriveTiles(source, [0, 24], true);
+    expect(pixel(north, 20, 1)).toEqual([88, 141, 72, 255]);
+    expect(pixel(north, 20, 0)).toEqual([88, 141, 72, 255]);
+    expect(pixel(south, 20, 256)).toEqual([96, 155, 80, 255]);
+    expect(pixel(south, 20, 257)).toEqual([96, 155, 80, 255]);
+    expect(north.contours![20 * 4 + 3]).toBe(180);
+    expect(south.contours![(257 * 258 + 20) * 4 + 3]).toBe(180);
+  });
+
   it("derives literal palette colors for flat land and water depths", () => {
     const land = deriveTiles(sourceWith(50_000), [0])[0];
     const shallow = deriveTiles(sourceWith(32_000), [0])[0];
