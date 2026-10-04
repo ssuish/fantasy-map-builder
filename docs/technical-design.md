@@ -40,6 +40,8 @@ Normalize text seeds with Unicode NFC and trim surrounding whitespace. An empty 
 
 The initial editor route is `/editor` and creates no session until the user chooses Blank or Generated Terrain and submits the form. The static root demo continues to use `StaticMapManifest`. These terrain interfaces remain app-local until another consumer requires an approved shared contract.
 
+The source kernel's initial output version is `terrain-v1`. Seed conversion is unsigned 32-bit FNV-1a over UTF-8 bytes of the version, a NUL separator, and the normalized seed. Generation uses six smooth fixed-point value-noise octaves, beginning with an 8×4 lattice and doubling its dimensions each octave. Horizontal lattice lookup is periodic; vertical lookup is bounded. Elevation and climate use independent hashed channels. Roughness controls octave persistence; temperature also includes a north/south latitude profile. Sea level changes classification metadata rather than regenerating elevation values. Fixed-point interpolation and explicit rounding keep source arithmetic reproducible between supported browsers.
+
 ## Creation and failure boundaries
 
 Initialize complete candidate state before committing Session Replacement. A confirmed discard authorizes replacement only on success; cancellation or Worker/allocation failure leaves current fields/art intact and offers retry with the same settings. Do not implement this as durable Map regeneration.
