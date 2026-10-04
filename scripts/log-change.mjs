@@ -58,7 +58,7 @@ const text = (value, label, max) => {
   if (value.includes("\0")) throw new Error(label + " contains a NUL byte");
   return value
     .replace(/[\u0001-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "")
-    .replace(/\r?\n|\r/g, " ")
+    .replace(/[\r\n\u2028\u2029]/g, " ")
     .replaceAll("|", "\\|")
     .replaceAll(String.fromCharCode(96), "'");
 };
@@ -116,10 +116,9 @@ try {
   }
   mkdirSync(dirname(logPath), { recursive: true });
   const existing = existsSync(logPath) ? readFileSync(logPath, "utf8") : "";
-  const escapeRegex = (value) => value.replace(/[.*+?^()|[\]\\]/g, "\\$&").replaceAll("$", "\\$");
-  const idPattern = new RegExp("<!-- change-id: " + escapeRegex(id) + " -->");
-  if (idPattern.test(existing)) throw new Error("duplicate change id: " + id);
-  const allIds = [...existing.matchAll(/<!-- change-id: ([A-Za-z0-9][A-Za-z0-9._:-]*) -->/g)].map((match) => match[1]);
+  const markerPattern = /^<!-- change-id: ([A-Za-z0-9][A-Za-z0-9._:-]*) -->$/;
+  const allIds = existing.split(/[\r\n\u2028\u2029]/).flatMap((line) => line.match(markerPattern)?.[1] ?? []);
+  if (allIds.includes(id)) throw new Error("duplicate change id: " + id);
   if (corrects !== undefined && !allIds.includes(corrects)) throw new Error("correction target does not exist: " + corrects);
   const now = process.env.MAP_BUILDER_LOG_TIME ?? new Date().toISOString();
   if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(now)) throw new Error("MAP_BUILDER_LOG_TIME must be an ISO UTC timestamp");

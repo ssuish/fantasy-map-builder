@@ -135,6 +135,36 @@ test("change logger rejects private and symlink input paths", (t) => {
   assert.match(result.stderr, /symlink/);
 });
 
+test("change logger ignores marker text embedded in legacy narrative", (t) => {
+  const f = fixture();
+  t.after(f.cleanup);
+  const path = logPath(f.root);
+  mkdirSync(join(f.root, "docs", "agents", "build-logs"), { recursive: true });
+  writeFileSync(path, "Legacy summary quoted <!-- change-id: spoofed -->\n");
+  const correction = writeEvent(f.root, "correction.json", {
+    id: "correction-1",
+    kind: "correction",
+    summary: "Must fail",
+    corrects: "spoofed",
+  });
+  let result = run(logger, f.root, ["--input", correction]);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /correction target does not exist/);
+  assert.equal(readFileSync(path, "utf8"), "Legacy summary quoted <!-- change-id: spoofed -->\n");
+  const real = writeEvent(f.root, "real.json", {
+    id: "spoofed",
+    kind: "decision",
+    summary: "Real event",
+    details: ["line one\u2028line two\u2029line three"],
+  });
+  result = run(logger, f.root, ["--input", real], { MAP_BUILDER_LOG_TIME: "2026-10-04T00:00:00.000Z" });
+  assert.equal(result.status, 0, result.stderr);
+  const output = readFileSync(path, "utf8");
+  assert.equal(output.includes("\u2028"), false);
+  assert.equal(output.includes("\u2029"), false);
+  assert.match(output, /change-id: spoofed/);
+});
+
 test("explorer supports all pinned JavaScript and TypeScript grammar extensions", (t) => {
   const f = fixture();
   t.after(f.cleanup);
