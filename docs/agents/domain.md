@@ -1,21 +1,20 @@
-# Domain Docs
+# Domain and document authority
 
-Before exploring, read the [current private pilot scope](private-pilot-scope.md). It controls first-release boundaries; broader product and architecture documents retain historical proposals.
+Read when changing terminology, requirements, architecture, or implementation sequencing.
 
-Before exploring, read the relevant domain documentation:
+| Concern | Canonical source |
+|---|---|
+| Product behavior and exclusions | [Product specification](../product-spec.md) |
+| Technical interfaces, representation, measurement | [Technical design](../technical-design.md) |
+| Retained entities and data invariants | [Data model](../data-model.md) |
+| System topology/current versus planned | [Architecture](../../ARCHITECTURE.md) |
+| Delivery dependencies and design gates | [Implementation plan](../implementation-plan.md) |
+| Domain language | [CONTEXT.md](../../CONTEXT.md) |
+| Durable rationale | [ADRs](../adr/) |
+| Actionable acceptance/shared status | Live GitHub issues; [tracker procedure](issue-tracker.md) |
 
-- `CONTEXT.md` at the repo root.
-- Relevant decisions in `docs/adr/`.
+Keep each meaning in its owning source and link it from consumers. Code/configuration establishes implemented behavior; current docs describe requirements/targets. Conflicts need reconciliation, not an implicit precedence guess. Owner-confirmed decisions constrain scope; planned checks and local history are not acceptance evidence.
 
-If a file does not exist, proceed without flagging its absence. Create domain docs when concepts or decisions are resolved.
+This repository has one domain context. Capture terms in CONTEXT.md, without implementation detail. Capture durable trade-offs sparingly in ADRs. [Pilot scope provenance](private-pilot-scope.md) and [Phase 1 decisions](phase-1-decisions.md) explain why current requirements changed; they are not extra parallel specifications.
 
-Use terms as defined in `CONTEXT.md`. If a needed concept is missing, reconsider the terminology or note the gap for domain modeling.
-
-If proposed work conflicts with an ADR, name the ADR and explain why it may be worth revisiting.
-
-## Layout
-
-This is a single-context repo:
-
-- `CONTEXT.md` contains domain language.
-- `docs/adr/` contains architecture decisions.
+Read [archived documents](../archive/2026-10-04-agent-docs/README.md) only for historical rationale or an explicitly reopened deferred feature. They do not participate in normal planning/implementation acceptance.

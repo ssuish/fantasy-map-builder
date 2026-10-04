@@ -1,166 +1,50 @@
-# Fantasy Map Builder MVP Product Specification
+# Private pilot product specification
 
-> **Scope update (2026-09-29):** This document describes the earlier, broader MVP. The first release is now the [private map pilot](agents/private-pilot-scope.md). Its keep/defer list takes precedence until this specification is rewritten for the later public release.
+This is the current product boundary, incorporating the private-pilot scope decision and the owner-confirmed Phase 1 questionnaire (#27, 2026-10-04). [CONTEXT.md](../CONTEXT.md) defines domain language. [Technical design](technical-design.md) owns implementation and measurement rules; live GitHub issues own actionable acceptance and shared status. Earlier broad MVP proposals are preserved in [the archive](archive/2026-10-04-agent-docs/README.md).
 
+## Goal and audience
 
-## Product goal
+An invited Creator makes one Map, saves a private Draft, publishes to a stable public URL, continues editing privately, and safely republishes. An anonymous Explorer opens that URL and pans/zooms the current Published Version. Invitations limit Creator access; published URLs remain anonymously readable. Strapi Admin is a separate operator interface, not the Creator editor.
 
-Fantasy Map Builder lets a Creator make a hand-authored, interactive fantasy map and publish it as an explorable world. Terrain follows a small, understandable physical model; fantasy artwork and Lore remain under the Creator's control.
+The private pilot succeeds only after the retained create–save–publish–view journey and deployed data recovery are exercised. The current static prototype does not establish editor or pilot acceptance. [Implementation plan](implementation-plan.md) records sequencing and authorization.
 
-The MVP succeeds when one Creator can move through the complete journey from an empty or generated map to a stable public URL, and an anonymous Explorer can understand that world through the map and its Lore.
+## Creation and terrain editing
 
-Canonical domain language lives in [`../CONTEXT.md`](../CONTEXT.md).
+- One fixed 2048×1024 Map per invited Creator. East/west wraps continuously; north/south is finite. Desktop Creator editing uses mouse or pen; touch-first editing is deferred. Explorer viewing is responsive.
+- Start an in-memory Editing Session with blank or deterministic Generated Terrain. Blank terrain has all three fields initialized as uniform flat land above sea level with neutral temperature/moisture.
+- Creation controls include a text seed, a random-seed action, the displayed effective seed, sea level, roughness, and temperature/moisture Climate Targets. Keep the seed when other creation settings change. Climate Targets influence distributions without guaranteeing arithmetic means; sea level determines land/water without promising land coverage percentages.
+- Choose sea level at creation and keep it fixed throughout the session. Global sea-level editing may be reconsidered after v1 if users request it; it is not promised future work.
+- An explicit “Discard session and start new Map” confirmation replaces the disposable in-memory session. Cancellation or failed creation preserves it; successful creation replaces it as one complete result. This is Session Replacement, not regeneration of a durable owned Map.
+- Elevation, temperature, and moisture are editable source fields. Land/water, coastline, biomes, hill-shading, depth tint, and contours derive from them. Artwork can intentionally contradict terrain; no biome or coastline Brush exists.
+- Each Terrain Property Brush paints toward a chosen target with radius, strength, and smooth falloff. Radius remains fixed in map space, has enforced minimum/maximum limits, and uses a preview that scales with zoom. Equivalent paths behave consistently regardless of pointer event frequency. Raise/lower and smoothing modes are deferred.
+- Primary drag paints with a Brush selected. Space+drag or a visible Pan tool pans; wheel zooms around the pointer. DOM zoom-in/out/fit controls have keyboard access, and gestures respect typing and focused controls.
+- Use one readable fantasy palette with distinct biome/depth colors, visible coastlines, and restrained hill-shading. Include a contour toggle, default off. The owner reviews fixed-seed screenshots before visual acceptance. [DESIGN.md](../DESIGN.md) owns interface styling.
+- Creation offers actionable errors and retry with the same settings. Preserve the old session on failed replacement. Rebuild rendering after recoverable graphics context loss from authoritative in-memory fields; document tested limits and clear terminal fallback.
 
-## Users
+The first editing slices operate only in memory. Refresh or session termination loses unsaved content. Durable saving and sign-in arrive later; early editor work makes no durable recovery promise.
 
-### Creator
+## Artwork and session history
 
-- Signs in through Google OAuth managed by Strapi.
-- Owns and edits multiple maps.
-- Has a minimal public profile with display name, biography, and Public Maps.
-- Is the only editor of each owned map.
+Retain Freehand Drawing with pen/eraser and basic road/river Feature Strokes. Render fixed layers in order: derived terrain/contours, Freehand Drawing, then road/river strokes. Terrain remains independent from authored artwork. Session undo/redo covers retained editing actions when its slice is implemented; undo history is not a durable revision history. Artwork/session details must be settled against #4/#6 before implementation rather than imported from archived stamp or Hotspot requirements.
 
-### Explorer
+## Ownership, Drafts, and publication
 
-- Does not need an account.
-- Opens Public or Unlisted Maps by URL.
-- Can pan, zoom, search, inspect Points of Interest, and read Lore.
-- Cannot modify maps or content.
+- Creator sign-in uses Google through Strapi. Every private operation verifies invitation and ownership; each Map has exactly one Creator and each invited Creator owns one Map.
+- A Draft stays private and can be saved/restored. Save immutable objects before committing a manifest that references them. Expected-revision conflicts protect newer state from stale tabs.
+- Publish and republish are explicit, Public, and cover the complete retained Draft. Produce an immutable Published Version and switch the stable public URL only after required assets are verified.
+- Failed save/publish preserves the last committed Draft/Published Version. Editing a Draft does not change Explorer content until a successful publication.
+- Explorers need no account and cannot edit. Public viewing resolves one coherent Published Version; anonymous clients cannot fetch private Draft data.
 
-### Administrator
+Exact Draft/release schemas, invitation mechanism, conflict recovery, and cleanup rules are future design gates in the implementation plan. Their absence is not permission to choose archived broader schemas.
 
-- Uses Strapi Admin; Creators never do.
-- Reviews reports submitted through an external Google Form.
-- Can unlist or unpublish maps and suspend Creators.
+## Acceptance and release constraints
 
-## Primary journey
+Prove continuous seams and finite boundaries, cross-browser starting-terrain determinism, incremental derivation, responsive generation/painting, and visual readability. Use the [technical measurement protocol](technical-design.md#correctness-and-performance-evidence) for cold/warm generation and per-sample Brush budgets.
 
-1. A Creator signs in with Google.
-2. They create a 2048×1024 horizontally wrapping map from blank terrain or procedural generation.
-3. They paint elevation, temperature, moisture, and freehand artwork.
-4. They add roads, rivers, Symbol Stamps, Hotspots, Feature Summaries, and linked Lore Entries.
-5. They publish the complete map as either Public or Unlisted.
-6. An anonymous Explorer pans, zooms, searches, toggles markers and contours, opens Hotspots, and reads Lore.
-7. The Creator continues editing a private Draft. Explorers keep seeing the last Published Version until the Creator republishes.
+Native hardware provides development diagnostics. The owner will choose/provision the final performance acceptance environment during final QA preparation before pilot release. VMware is proposed, not approved as equivalent to the original physical baseline. Pending performance evidence blocks sign-off and pilot release, not implementation.
 
-## Creator experience
+Before real Creator data or invitations, prove ownership isolation, Draft save/restore, stale-tab conflicts, upload-before-manifest rejection, failed-publish preservation, and a timed restore of a saved Draft plus current Published Version. Retain existing Firebase Hosting, Cloud Run/Strapi, Neon staging, and R2 deployment path. #24 owns invitation controls, basic abuse limits, backup/retention ownership, and deployed recovery evidence.
 
-### Map creation
+## Outside the pilot
 
-- One fixed map format: 2048×1024.
-- East and west edges join continuously; north and south are finite boundaries.
-- Start from a blank map or a generated starting canvas.
-- Generator controls: seed, sea level or land coverage, terrain roughness, average temperature, and average moisture.
-- Regeneration is not an editing tool. It requires an explicit destructive warning.
-- Regeneration deletes terrain, freehand artwork, roads, rivers, stamps, Feature Summaries, and Hotspots. Lore Entries survive, but links to deleted Points of Interest are removed.
-
-### Terrain
-
-- Smooth raster painting; no visible square or hex grid.
-- Editable source fields: elevation, temperature, and moisture.
-- Derived output: land, water, coastline, biomes, hill-shading, water-depth tint, and contour lines.
-- Sea level determines land and water from elevation.
-- Biomes are derived from elevation, temperature, and moisture. There is no biome brush.
-- Contours are a display overlay. The Creator chooses the published default; each Explorer may override visibility locally.
-- One built-in fantasy terrain palette in MVP.
-
-### Artwork and features
-
-- Built-in hand-drawn fantasy atlas style with dark ink, slightly imperfect lines, transparent backgrounds, and tintable accents.
-- Symbol Stamps cover cities, trees, mountains, and landmarks.
-- Feature Strokes cover roads and rivers.
-- Freehand pen and eraser tools support custom artwork.
-- Artwork may intentionally contradict terrain data. The terrain model guides but never constrains fantasy art.
-- Fixed layer order:
-  1. Derived terrain and contours.
-  2. Freehand artwork.
-  3. Rivers and roads.
-  4. Symbol Stamps.
-  5. Hotspots.
-- Layer visibility can be toggled while editing. Creators cannot add, rename, reorder, group, or blend layers.
-- Symbol Stamps can be moved, resized, rotated, and deleted.
-- Hotspots can be moved, assigned a click radius, shown or hidden, and deleted.
-- Roads and rivers can be selected, restyled, or deleted; reshaping means redrawing.
-- Freehand artwork is erased or repainted rather than edited as vectors.
-- Terrain is changed by repainting.
-
-### Interactive content and Lore
-
-- A Creator places a visible or invisible Hotspot over artwork to make a Point of Interest interactive.
-- Each Hotspot is a point with an adjustable click radius.
-- Selecting a Hotspot shows a short Feature Summary and linked Lore Entries.
-- Points of Interest and Lore Entries have a many-to-many relationship.
-- Lore Entries can also link to other Lore Entries.
-- Lore Entry fields: title, summary, rich-text body, optional cover image, inline images, and Lore Tags.
-- Lore is timeless in-world reference material. There is no separate Blog or Blog Post model.
-- No comments, ratings, embeds, or scheduled publishing.
-
-### Saving and publishing
-
-- Draft autosaves after each completed action or stroke.
-- Undo and redo apply only to the current editor session.
-- Refreshing or closing the editor clears undo history.
-- There is no user-facing revision history or rollback.
-- Publish is explicit and map-wide: terrain, artwork, Points of Interest, Feature Summaries, and Lore become public together.
-- Publish failure leaves the prior Published Version unchanged.
-- Draft is always private.
-- Published visibility is either:
-  - Public: available by URL and in site discovery/search.
-  - Unlisted: available anonymously by URL but excluded from discovery/search.
-
-## Explorer experience
-
-- Pan and zoom the map with seamless horizontal wrapping.
-- Select Hotspots and open linked Lore.
-- Search Lore and Points of Interest within a map.
-- Toggle visible Hotspot markers.
-- Toggle contour visibility locally.
-- Browse newest and recently updated Public Maps.
-- Search public content by map title, Creator display name, Lore text, Point of Interest name, and Lore Tags.
-- View minimal Creator profiles and their Public Maps.
-- Unlisted Maps never appear in search, discovery, or Creator profiles.
-
-## Moderation and deletion
-
-- A Report action opens an external Google Form.
-- The sole Administrator reviews reports manually in Strapi.
-- The Administrator can unlist or unpublish maps and suspend Creators. Administrator-unlisted Maps remain available by direct URL but leave discovery, search, and Creator profiles.
-- Automated text or image moderation is outside MVP.
-- Unpublishing, suspension, and deletion immediately remove affected maps from public map routes, discovery, and search.
-- Deleting a map requires typed-name confirmation and permanently removes database and R2 data asynchronously. Existing direct URLs to immutable public assets may remain readable until cleanup and cache expiry; the immediate access rule applies to map routes, discovery, and search.
-- Deleting a Creator account applies the same process to every owned map.
-- MVP has no recycle bin or recovery.
-
-## Device and browser scope
-
-- Creator editor: desktop or laptop with mouse or pen.
-- Explorer: responsive desktop, tablet, and phone.
-- Touch-first editing on phones and tablets is a later iteration.
-- Production rendering uses PixiJS WebGL. Browsers without required WebGL support receive a clear unsupported-browser message.
-
-## Non-goals
-
-- Collaborative or real-time editing.
-- Map version history, named releases, or public timelines.
-- Arbitrary canvas dimensions, infinite canvases, globes, or vertical wrapping.
-- Dynamic seasons, weather, erosion, hydrology, or time-based simulation.
-- Automatic rivers, roads, settlements, or fantasy features.
-- Uploaded brush packs, custom icons, arbitrary layer systems, or palette editors.
-- Print, PNG, PDF, or editable project-file export.
-- Explorer accounts, comments, reactions, following, rankings, recommendations, or social feeds.
-- Touch-first Creator editing.
-
-## MVP acceptance criteria
-
-- A deterministic seed and generator settings produce the same starting terrain.
-- Painting across the east/west seam produces a continuous result.
-- Coastline and biome output updates from source fields without independent coastline or biome data.
-- Draft autosave survives refresh without changing the Published Version.
-- A stale editor tab cannot silently overwrite a newer Draft.
-- Failed publication never exposes a partial release.
-- Public and Unlisted visibility behave as defined.
-- Anonymous Explorers can load and navigate a Published Version without Strapi credentials.
-- Global discovery and search never return Draft or Unlisted content; within-map search works on any accessible Published Version.
-- Unpublishing, suspension, and deletion immediately stop public map resolution and remove affected results from discovery and search.
-- Regeneration and permanent deletion require explicit confirmation and honor their documented deletion scope.
-
+Symbol Stamps, regeneration, Hotspots, Points of Interest, Feature Summaries, Lore, uploaded Lore images, tags/relations, Unlisted mode, discovery/search, Creator Profile pages, moderation/deletion workflows, production launch, and touch-first editing are deferred. Closed deferred issues are historical, not completed capabilities. Collaboration, arbitrary canvas sizes, vertical wrapping, simulation, export, and custom asset/layer systems are also outside this release. Reopening deferred work requires an explicit scope decision.
