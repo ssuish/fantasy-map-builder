@@ -1,12 +1,14 @@
 import { Application, extend } from "@pixi/react";
 import { Assets, Sprite, type Texture } from "pixi.js";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { type StaticMapManifest } from "@atlas/contracts";
 import { loadStaticMapManifest } from "./mapManifest";
 import "./styles.css";
 
 extend({ Sprite });
+
+const TerrainEditor = lazy(() => import("./editor/Editor"));
 
 const manifestUrl =
   import.meta.env.VITE_PUBLIC_MAP_MANIFEST_URL?.trim() ||
@@ -135,4 +137,14 @@ function App() {
 const rootElement = document.getElementById("root");
 if (!rootElement) throw new Error("Missing React root element.");
 
-createRoot(rootElement).render(<App />);
+const editorRoute = ["/editor", "/editor/"].includes(window.location.pathname);
+
+createRoot(rootElement).render(
+  editorRoute ? (
+    <Suspense fallback={<main role="status">Opening terrain editor…</main>}>
+      <TerrainEditor />
+    </Suspense>
+  ) : (
+    <App />
+  ),
+);

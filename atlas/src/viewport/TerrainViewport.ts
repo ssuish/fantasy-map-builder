@@ -197,8 +197,6 @@ export class TerrainViewport {
     canvas.tabIndex = 0;
     canvas.dataset.atlasViewport = "ready";
     canvas.style.display = "block";
-    canvas.style.width = "100%";
-    canvas.style.height = "100%";
     canvas.style.touchAction = "none";
     this.app = app;
     this.canvas = canvas;
@@ -700,6 +698,11 @@ export class TerrainViewport {
     canvas.dataset.atlasNavigation = this.enabled ? "enabled" : "disabled";
     canvas.dataset.atlasReady = this.contextLost ? "context-lost" : "ready";
     canvas.dataset.atlasPanTool = this.panToolEnabled ? "on" : "off";
+    canvas.dataset.atlasCenterX = String(this.state.centerX);
+    canvas.dataset.atlasCenterY = String(this.state.centerY);
+    canvas.dataset.atlasScale = String(this.state.scale);
+    canvas.dataset.atlasWidth = String(this.state.width);
+    canvas.dataset.atlasHeight = String(this.state.height);
   }
 
   private safeCallback(callback: (() => void) | undefined): void {

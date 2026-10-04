@@ -4,7 +4,7 @@ This document owns system topology and current-versus-planned responsibility bou
 
 ## Implemented prototype
 
-The repository contains a React/PixiJS Vite app, a Strapi CMS, and a focused static-manifest contract package in one npm workspace. The frontend renders the fixed static demo image from a validated manifest. The CMS has an unauthenticated health route and dependency-maintenance integration tests. Terrain editing, application ownership, Draft, and publication flows are not implemented by this harness task.
+The repository contains a React/PixiJS Vite app, a Strapi CMS, and a focused static-manifest contract package in one npm workspace. The root frontend renders the fixed static demo image from a validated manifest. `/editor` provides disposable blank/generated terrain creation, contours, wrapped/bounded navigation, confirmed atomic session replacement, and bounded WebGL recovery. A Worker computes source fields and CPU presentation tiles; the in-memory Terrain Engine retains authoritative fields, while the viewport receives derived presentation only. Brushes, artwork, application ownership, Draft, and publication remain later slices. The CMS has an unauthenticated health route and dependency-maintenance integration tests.
 
 Staging uses Firebase Hosting for the SPA, public R2 for demo manifest/art, Cloud Run for Strapi, and Neon staging PostgreSQL. Private R2 is reserved for retained Draft objects. Local Compose provides CMS, PostgreSQL, and an S3-compatible store; local storage cannot establish production R2 semantics. Deployment identities, resource addresses, and dated observed checks belong in [runbooks](docs/runbooks/README.md), not repeated here.
 
