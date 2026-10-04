@@ -1,329 +1,189 @@
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
 import {
+  closeSync,
   existsSync,
+  fsyncSync,
+  lstatSync,
   mkdirSync,
-  readdirSync,
+  openSync,
   readFileSync,
-  statSync,
-  writeFileSync,
+  readlinkSync,
+  renameSync,
+  rmSync,
+  writeSync,
 } from "node:fs";
-import { join } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 
+const root = resolve(execFileSync("git", ["rev-parse", "--show-toplevel"], { encoding: "utf8" }).trim());
+process.chdir(root);
 const args = process.argv.slice(2);
-const option = (name, fallback) => {
+const readOption = (name, fallback = undefined) => {
   const index = args.indexOf(name);
-  return index === -1 ? fallback : args[index + 1];
+  if (index === -1) return fallback;
+  if (index === args.length - 1 || args[index + 1].startsWith("--")) {
+    throw new Error(name + " requires a value");
+  }
+  return args[index + 1];
 };
 
-const task = option("--task", "local");
+for (const retired of ["--phase", "--progress", "--next"]) {
+  if (args.includes(retired)) {
+    throw new Error(retired + " was retired: run npm run verify -- --task <slug>; record scope or decisions with npm run log:change -- --input <file>");
+  }
+}
+
+const task = readOption("--task", "local");
 if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(task)) {
   throw new Error("--task must be a lowercase kebab-case slug");
 }
-
-const requestedPhase = option("--phase", "") ?? "";
-const phaseNumber = requestedPhase.replace(/^phase-/, "");
-if (requestedPhase && !/^[0-6]$/.test(phaseNumber)) {
-  throw new Error("--phase must be one of 0, 1, 2, 3, 4, 5, or 6");
+const known = new Set(["--task"]);
+for (let index = 0; index < args.length; index += 1) {
+  if (args[index].startsWith("--") && !known.has(args[index])) {
+    throw new Error("Unknown option " + args[index]);
+  }
 }
 
-const git = (...gitArgs) =>
-  execFileSync("git", gitArgs, { encoding: "utf8", maxBuffer: 20 * 1024 * 1024 }).trim();
+const git = (...gitArgs) => execFileSync("git", gitArgs, {
+  cwd: root,
+  encoding: "utf8",
+  maxBuffer: 20 * 1024 * 1024,
+}).trim();
+const isPrivatePath = (candidate) => {
+  const normalized = candidate.replaceAll("\\", "/");
+  return normalized.split("/").some((part) =>
+    (part.startsWith(".env") && part !== ".env.example") || /^CREDENTIALS(?:\.|$)/i.test(part),
+  );
+};
+
+const assertSafeOutputPath = (absolutePath) => {
+  const resolved = resolve(absolutePath);
+  const relativePath = relative(root, resolved);
+  if (relativePath.startsWith("..") || relativePath === "") {
+    throw new Error("verification receipt path must stay inside the repository");
+  }
+  if (isPrivatePath(relativePath)) throw new Error("verification receipt path may not be private");
+  let current = root;
+  for (const part of relativePath.split(/[\\/]/).slice(0, -1)) {
+    current = join(current, part);
+    if (existsSync(current) && lstatSync(current).isSymbolicLink()) {
+      throw new Error("refusing symlinked receipt directory: " + relative(root, current));
+    }
+  }
+  if (existsSync(resolved) && lstatSync(resolved).isSymbolicLink()) {
+    throw new Error("refusing symlinked verification receipt");
+  }
+  return resolved;
+};
+
+const safeGitDiff = (staged) => {
+  const names = execFileSync("git", ["diff", ...(staged ? ["--cached"] : []), "--name-only", "-z"], {
+    cwd: root,
+    encoding: "buffer",
+    maxBuffer: 20 * 1024 * 1024,
+  }).toString("utf8").split("\0").filter(Boolean);
+  return names.filter((name) => !isPrivatePath(name)).map((name) =>
+    execFileSync("git", ["diff", ...(staged ? ["--cached"] : []), "--binary", "--", name], {
+      cwd: root,
+      encoding: "buffer",
+      maxBuffer: 20 * 1024 * 1024,
+    }).toString("base64"),
+  ).join("\n");
+};
+
+const untrackedFingerprint = () => {
+  const paths = execFileSync("git", ["ls-files", "--others", "--exclude-standard", "-z"], {
+    cwd: root,
+    encoding: "buffer",
+    maxBuffer: 20 * 1024 * 1024,
+  }).toString("utf8").split("\0").filter(Boolean).sort();
+  return paths.map((path) => {
+    const absolute = resolve(root, path);
+    let info;
+    try {
+      info = lstatSync(absolute);
+    } catch {
+      return path + ":missing";
+    }
+    if (isPrivatePath(path)) return path + ":private:" + info.mode + ":" + info.size + ":" + info.mtimeMs;
+    if (info.isSymbolicLink()) return path + ":symlink:" + readlinkSync(absolute);
+    if (!info.isFile()) return path + ":non-file:" + info.mode + ":" + info.size + ":" + info.mtimeMs;
+    return path + ":" + info.size + ":" + info.mtimeMs + ":" +
+      createHash("sha256").update(readFileSync(absolute)).digest("hex");
+  }).join("\n");
+};
+
+const treeFingerprint = (head, status) => createHash("sha256")
+  .update(head + "\n" + status + "\n" + safeGitDiff(false) + "\n" + safeGitDiff(true) + "\n" + untrackedFingerprint())
+  .digest("hex");
+
+const receiptPath = join(root, "docs", "agents", "verification", task, "STATUS.md");
+
+const writeAtomic = (target, content) => {
+  const absolute = assertSafeOutputPath(target);
+  const directory = dirname(absolute);
+  mkdirSync(directory, { recursive: true });
+  const temporary = join(directory, ".STATUS.md." + process.pid + "." + randomBytes(8).toString("hex") + ".tmp");
+  let descriptor;
+  try {
+    descriptor = openSync(temporary, "wx", 0o600);
+    writeSync(descriptor, content, null, "utf8");
+    fsyncSync(descriptor);
+    closeSync(descriptor);
+    descriptor = undefined;
+    renameSync(temporary, absolute);
+  } finally {
+    if (descriptor !== undefined) closeSync(descriptor);
+    rmSync(temporary, { force: true });
+  }
+};
 
 const head = git("rev-parse", "HEAD");
 const branch = git("branch", "--show-current") || "detached";
 const startedAt = new Date().toISOString();
 const status = git("status", "--porcelain=v1", "--untracked-files=all");
-const diff = git("diff", "--binary");
-const stagedDiff = git("diff", "--cached", "--binary");
-const isPrivatePath = (path) => {
-  const normalized = path.replaceAll("\\", "/");
-  const base = normalized.split("/").at(-1) ?? normalized;
-  return (base.startsWith(".env") && base !== ".env.example") || /^CREDENTIALS(?:\.|$)/i.test(base);
-};
-const untracked = execFileSync("git", ["ls-files", "--others", "--exclude-standard", "-z"], {
-  encoding: "utf8",
-  maxBuffer: 20 * 1024 * 1024,
-})
-  .split("\0")
-  .filter(Boolean)
-  .map((path) => {
-    const stat = statSync(path);
-    if (isPrivatePath(path) || !stat.isFile()) return path + ":" + stat.size + ":" + stat.mtimeMs;
-    const contentHash = createHash("sha256").update(readFileSync(path)).digest("hex");
-    return path + ":" + stat.size + ":" + stat.mtimeMs + ":" + contentHash;
-  })
-  .join("\n");
-const fingerprint = createHash("sha256")
-  .update(head + "\n" + status + "\n" + stagedDiff + "\n" + diff + "\n" + untracked)
-  .digest("hex");
-
-const canonicalLogPath = join("docs", "agents", "build-logs", "build-log.md");
-const preflightPhaseHeader =
-  "| Phase | Status | Branch | Started | Completed | Evidence | Blockers |\n|---|---|---|---|---|---|---|";
-const preflightTaskHeader =
-  "| Task | Result | Completed | Evidence |\n|---|---|---|---|";
-const preflightPhaseNames = Array.from({ length: 7 }, (_, index) => "Phase " + index);
-
-const validateExistingCanonicalLog = () => {
-  if (!existsSync(canonicalLogPath)) return;
-  const content = readFileSync(canonicalLogPath, "utf8");
-  const phaseStart = content.indexOf("## Phase summary");
-  const taskStart = content.indexOf("\n## Task verification receipts");
-  const activityStart = content.indexOf("\n## Append-only activity");
-  const phaseSection = phaseStart >= 0 && taskStart > phaseStart ? content.slice(phaseStart, taskStart) : "";
-  const validPhaseRows = preflightPhaseNames.every((phase) =>
-    new RegExp("^\\| " + phase + " \\| (Not started|In progress|Blocked|Complete) \\|", "m").test(phaseSection),
-  );
-  const valid =
-    phaseStart >= 0 &&
-    content.includes("## Phase summary\n\n" + preflightPhaseHeader + "\n") &&
-    validPhaseRows &&
-    taskStart > phaseStart &&
-    content.includes("## Task verification receipts\n\n" + preflightTaskHeader + "\n") &&
-    activityStart > taskStart;
-  if (!valid) {
-    throw new Error(canonicalLogPath + " has malformed phase, task, or activity structure; preserving it without running checks");
-  }
-};
-
-validateExistingCanonicalLog();
+const fingerprint = treeFingerprint(head, status);
+assertSafeOutputPath(receiptPath);
 const checks = ["lint", "typecheck", "test", "build"];
 const results = [];
+
 for (const check of checks) {
   const started = Date.now();
-  const result = spawnSync("npm", ["run", check], { stdio: "inherit" });
-  results.push({ check, code: result.status ?? 1, seconds: Math.round((Date.now() - started) / 1000) });
-  if (result.status !== 0) break;
+  const result = spawnSync("npm", ["run", check], { cwd: root, stdio: "inherit" });
+  const code = result.error ? 1 : (result.status ?? 1);
+  results.push({ check, code, seconds: Math.round((Date.now() - started) / 1000) });
+  if (code !== 0) break;
 }
 
 const passed = results.length === checks.length && results.every(({ code }) => code === 0);
-validateExistingCanonicalLog();
-const directory = join("docs", "agents", "build-logs", task);
-mkdirSync(directory, { recursive: true });
 const completedAt = new Date().toISOString();
-const mdCode = String.fromCharCode(96);
-
-// Only observed system metadata is written. Arbitrary --progress and --next text
-// is intentionally accepted for compatibility but omitted from local evidence.
-const safeText = (value, fallback = "—") =>
-  String(value ?? fallback)
-    .replace(/\r?\n/g, " ")
-    .replace(/\|/g, "\\|")
-    .replace(new RegExp(mdCode, "g"), "'")
-    .slice(0, 240);
-
-const resultLine = ({ check, code, seconds }) =>
-  "| " + mdCode + "npm run " + check + mdCode + " | " + code + " | " + seconds + " |";
 const checksObserved = results.length
-  ? results.map(({ check, code }) => mdCode + "npm run " + check + mdCode + " exit " + code).join("; ")
+  ? results.map(({ check, code }) => "npm run " + check + " exit " + code).join("; ")
   : "No checks observed";
-const skippedChecks = checks.slice(results.length);
-const skippedLine = skippedChecks.length
-  ? " Skipped after the first failure: " + skippedChecks.map((check) => mdCode + "npm run " + check + mdCode).join(", ") + "."
+const skipped = checks.slice(results.length);
+const skippedLine = skipped.length
+  ? " Skipped after the first failure: " + skipped.map((check) => "npm run " + check).join(", ") + "."
   : "";
-
+const mdCode = String.fromCharCode(96);
 const lines = [
   "# " + task + " verification",
   "",
   "- Started (UTC): " + startedAt,
   "- Completed (UTC): " + completedAt,
-  "- Branch: " + mdCode + safeText(branch) + mdCode,
+  "- Branch: " + mdCode + branch.replaceAll(mdCode, "'") + mdCode,
   "- Git HEAD: " + mdCode + head + mdCode,
   "- Working-tree fingerprint: " + mdCode + fingerprint + mdCode,
   "- Result: " + (passed ? "passed" : "failed"),
-  "- Progress: Omitted from local evidence; caller free text is not recorded.",
-  "- Next: Omitted from local evidence; caller free text is not recorded.",
   "",
   "| Command | Exit | Seconds |",
   "|---|---:|---:|",
-  ...results.map(resultLine),
+  ...results.map(({ check, code, seconds }) => "| " + mdCode + "npm run " + check + mdCode + " | " + code + " | " + seconds + " |"),
   "",
   "Observed checks: " + checksObserved + "." + skippedLine,
   "",
-  "This local record is valid only while Git HEAD and the working-tree fingerprint match. CI output holds full logs.",
-  "No secrets, environment values, arbitrary caller text, or raw command output are recorded here.",
-  "",
-];
-writeFileSync(join(directory, "STATUS.md"), lines.join("\n"));
-
-const phaseSummaryHeader =
-  "| Phase | Status | Branch | Started | Completed | Evidence | Blockers |\n|---|---|---|---|---|---|---|";
-const taskReceiptHeader =
-  "| Task | Result | Completed | Evidence |\n|---|---|---|---|";
-
-// New local logs start without inferred completion. Existing phase rows are preserved.
-const phaseRows = [
-  {
-    phase: "Phase 0",
-    status: "Not started",
-    branch: "—",
-    started: "—",
-    completed: "—",
-    evidence: "docs/implementation-plan.md#phase-0-foundation-and-walking-skeleton (planned scope only)",
-    blockers: "Inspect durable Phase 0 acceptance evidence before changing status.",
-  },
-  {
-    phase: "Phase 1",
-    status: "Not started",
-    branch: "—",
-    started: "—",
-    completed: "—",
-    evidence: "docs/agents/private-pilot-scope.md; issues #2–#3 (planned scope only)",
-    blockers: "Dependency triage issue #19 must be resolved before Phase 1.",
-  },
-  {
-    phase: "Phase 2",
-    status: "Not started",
-    branch: "—",
-    started: "—",
-    completed: "—",
-    evidence: "docs/agents/private-pilot-scope.md; issues #4 and #6 (planned scope only)",
-    blockers: "Phase 1 acceptance evidence is not recorded.",
-  },
-  {
-    phase: "Phase 3",
-    status: "Not started",
-    branch: "—",
-    started: "—",
-    completed: "—",
-    evidence: "docs/agents/private-pilot-scope.md; issues #7–#10 (planned scope only)",
-    blockers: "Phase 2 acceptance evidence is not recorded.",
-  },
-  {
-    phase: "Phase 4",
-    status: "Not started",
-    branch: "—",
-    started: "—",
-    completed: "—",
-    evidence: "Legacy Lore phase; deferred from private pilot",
-    blockers: "Historical phase; no pilot acceptance is assigned.",
-  },
-  {
-    phase: "Phase 5",
-    status: "Not started",
-    branch: "—",
-    started: "—",
-    completed: "—",
-    evidence: "docs/agents/private-pilot-scope.md; issues #14–#15 (planned scope only)",
-    blockers: "Draft and ownership integration evidence for #14 is not recorded.",
-  },
-  {
-    phase: "Phase 6",
-    status: "Not started",
-    branch: "—",
-    started: "—",
-    completed: "—",
-    evidence: "Legacy launch phase; deferred from private pilot",
-    blockers: "Historical phase; pilot readiness is issue #24.",
-  },
-];
-
-const readTaskReceipts = () => {
-  const root = join("docs", "agents", "build-logs");
-  if (!existsSync(root)) return [];
-
-  return readdirSync(root, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => {
-      const receiptPath = join(root, entry.name, "STATUS.md");
-      if (!existsSync(receiptPath)) return null;
-      const receipt = readFileSync(receiptPath, "utf8");
-      const observedAt = receipt.match(/^- Completed \(UTC\): (.+)$/m)?.[1] ??
-        receipt.match(/^- Time \(UTC\): (.+)$/m)?.[1] ??
-        "—";
-      const result = receipt.match(/^- Result: (passed|failed)$/m)?.[1] ?? "unknown";
-      return {
-        task: entry.name,
-        result,
-        completed: result === "passed" ? observedAt : "—",
-        evidence: "docs/agents/build-logs/" + entry.name + "/STATUS.md",
-      };
-    })
-    .filter(Boolean);
-};
-
-const formatPhaseRow = (row) =>
-  "| " + safeText(row.phase) + " | " + row.status + " | " + safeText(row.branch) + " | " +
-  safeText(row.started) + " | " + safeText(row.completed) + " | " +
-  safeText(row.evidence) + " | " + safeText(row.blockers) + " |";
-
-const formatTaskReceiptRow = (row) =>
-  "| " + safeText(row.task) + " | " + row.result + " | " +
-  safeText(row.completed) + " | " + safeText(row.evidence) + " |";
-
-const renderCanonicalLog = (activityBody = "") => [
-  "# Build Log",
-  "",
-  "Ignored local source of truth for observed phase status, task verification evidence, and phase activity.",
-  "Phase status changes require phase acceptance evidence; task verification never changes phase status automatically.",
-  "Planned work is not evidence. The phase summary is current; activity entries are append-only. Task results are historical until their HEAD and fingerprint match the current tree.",
-  "Current first-release scope: docs/agents/private-pilot-scope.md. Phase 4 Lore and Phase 6 launch are legacy rows, not pilot gates; pilot readiness is issue #24.",
-  "",
-  "## Phase summary",
-  "",
-  phaseSummaryHeader,
-  ...phaseRows.map(formatPhaseRow),
-  "",
-  "## Task verification receipts",
-  "",
-  taskReceiptHeader,
-  ...readTaskReceipts().sort((a, b) => a.task.localeCompare(b.task)).map(formatTaskReceiptRow),
-  "",
-  "## Append-only activity",
-  "",
-  "Corrections append a new activity entry naming the corrected entry and the evidence that changed.",
-  activityBody ? "\n" + activityBody.trimStart() : "",
+  "This local record is valid only while Git HEAD and the working-tree fingerprint match.",
+  "No secrets, environment values, caller text, or raw command output are recorded here.",
   "",
 ].join("\n");
-
-const updateTaskReceiptTable = (content) => {
-  const rows = readTaskReceipts().sort((a, b) => a.task.localeCompare(b.task)).map(formatTaskReceiptRow).join("\n");
-  return content.replace(
-    /(## Task verification receipts\n\n\| Task \| Result \| Completed \| Evidence \|\n\|---\|---\|---\|---\|\n)([\s\S]*?)(?=\n## Append-only activity)/,
-    "$1" + rows + "\n",
-  );
-};
-
-const loadLog = () => {
-  if (!existsSync(canonicalLogPath)) {
-    mkdirSync(join("docs", "agents", "build-logs"), { recursive: true });
-    writeFileSync(canonicalLogPath, renderCanonicalLog());
-  } else {
-    const existing = readFileSync(canonicalLogPath, "utf8");
-    const activityIndex = existing.indexOf("\n## Append-only activity");
-    const hasAllPhases = phaseRows.every(({ phase }) => existing.includes("| " + phase + " |"));
-    if (activityIndex === -1 || !hasAllPhases || !existing.includes("## Task verification receipts")) {
-      throw new Error(canonicalLogPath + " has malformed phase, task, or activity structure; preserving it without rewriting");
-    }
-  }
-
-  const updated = updateTaskReceiptTable(readFileSync(canonicalLogPath, "utf8"));
-  writeFileSync(canonicalLogPath, updated);
-  return updated;
-};
-
-const logContent = loadLog();
-const activityScope = phaseNumber ? "Phase " + phaseNumber + " (phase status unchanged by verifier)" : "No phase assigned";
-const activity = [
-  "## " + completedAt + " — Task " + safeText(task) + ": verification run",
-  "",
-  "- **Status:** Task verification " + mdCode + (passed ? "passed" : "failed") + mdCode + "; phase summary unchanged.",
-  "- **Branch:** " + mdCode + safeText(branch) + mdCode,
-  "- **Authorized scope:** Task verification for " + mdCode + safeText(task) + mdCode + "; " + activityScope + ".",
-  "- **Changes:** Verification receipt written; source files were not changed by this script.",
-  "- **Red:** Not applicable; this command records verification evidence and does not define a failing implementation check.",
-  "- **Green:** " + (passed ? checksObserved + "." : "Not achieved; " + checksObserved + ".") + skippedLine,
-  "- **Refactor:** Not applicable; no implementation refactor was performed.",
-  "- **Verification:** " + checksObserved + "." + skippedLine,
-  "- **Review:** Not run by this local verification command.",
-  "- **Operational evidence:** No deployment, recovery, or external system check was run.",
-  "- **Limitations:** Local task receipt only; phase acceptance, CI, deployment, review, and recovery evidence remain separate.",
-  "- **Blockers:** " + (passed ? "None" : mdCode + "npm run " + (results.at(-1)?.check ?? "unknown") + mdCode + " exited " + (results.at(-1)?.code ?? 1)),
-  "- **Next action:** Omitted; caller free text is not evidence.",
-  "- **Evidence references:** " + mdCode + "docs/agents/build-logs/" + task + "/STATUS.md" + mdCode + "; Git HEAD " + mdCode + head + mdCode + "; working-tree fingerprint " + mdCode + fingerprint + mdCode + ".",
-  "",
-].join("\n");
-
-writeFileSync(canonicalLogPath, logContent.trimEnd() + "\n\n" + activity, { encoding: "utf8" });
+writeAtomic(receiptPath, lines);
 process.exitCode = passed ? 0 : 1;
