@@ -1,8 +1,23 @@
 # Fantasy Map Builder
 
-This context describes maps, their authored content, and the people who create and explore them.
+This context describes maps, their authored content, and the people who create and explore them. The first release follows the private pilot product specification in docs/product-spec.md. Terms marked deferred describe historical proposals, not pilot requirements.
 
 ## Language
+
+**Editing Session**:
+The current in-memory Map and edits. Ending or refreshing the session loses content that has not been saved as a Draft.
+_Avoid_: Draft, saved Map
+
+**Session Replacement**:
+Discarding the current Editing Session to start a new blank or generated Map, after confirmation. Failed creation preserves the current session.
+_Avoid_: Regeneration, durable Map deletion
+
+**Climate Target**:
+A creation preference that influences the distribution of temperature or moisture without guaranteeing an exact average.
+_Avoid_: Exact mean, fixed biome
+
+**Seed**:
+The displayed text value that, together with generation settings and generator version, identifies reproducible Generated Terrain.
 
 **Map**:
 An editable, finite 2D fantasy world representation whose terrain is drawn manually or generated procedurally before further editing. Its east and west edges connect continuously; its north and south edges are boundaries.
@@ -38,7 +53,7 @@ _Avoid_: Pen, paint tool
 Terrain created from procedural rules as a starting point in the same editable form as manually authored terrain.
 _Avoid_: Generated image, baked terrain
 
-**Regeneration**:
+**Regeneration** (deferred):
 A confirmed destructive restart of a map's canvas. It replaces terrain, Map Features, Feature Summaries, and Hotspots while preserving Lore Entries; links from preserved Lore Entries to deleted Map Features are removed.
 _Avoid_: Terrain edit, partial generation
 
@@ -61,7 +76,7 @@ _Avoid_: Feature Stroke, elevation data
 An authored drawing placed on terrain, such as a city, road, river, forest, or magical landmark. It is artistic, may intentionally conflict with terrain data, and is not produced or constrained by the terrain model.
 _Avoid_: Terrain property, derived terrain
 
-**Symbol Stamp**:
+**Symbol Stamp** (deferred):
 A built-in reusable drawing placed to depict a city, tree, mountain, landmark, or similar Map Feature.
 _Avoid_: Uploaded asset, Point of Interest
 
@@ -73,35 +88,35 @@ _Avoid_: Terrain Brush, pathfinding route
 Artwork a Creator draws directly with a pen-style tool instead of placing Symbol Stamps.
 _Avoid_: Terrain Brush, uploaded asset
 
-**Point of Interest**:
+**Point of Interest** (deferred):
 A notable, localized Map Feature exposed to Explorers through a Hotspot, such as a city or magical forest.
 _Avoid_: Every Map Feature, Hotspot
 
-**Hotspot**:
+**Hotspot** (deferred):
 A visible or invisible interactive point with an adjustable interaction radius, placed over artwork. Selecting it reveals the Point of Interest's Feature Summary and linked Lore Entries.
 _Avoid_: Map Feature, Symbol Stamp
 
-**Feature Summary**:
+**Feature Summary** (deferred):
 A short description shown when an Explorer selects a Map Feature.
 _Avoid_: Lore Entry, blog post
 
-**Lore Entry**:
+**Lore Entry** (deferred):
 A timeless in-world reference about history, people, factions, places, or related subjects. A Lore Entry can link to other Lore Entries and multiple Map Features, and each Map Feature can link to multiple Lore Entries.
 _Avoid_: Feature Summary, blog post
 
-**Lore**:
+**Lore** (deferred):
 The public collection of a map's Lore Entries.
 _Avoid_: Blog, feed
 
-**Lore Tag**:
+**Lore Tag** (deferred):
 A Creator-defined label used to group, browse, and search Lore Entries within one map.
 _Avoid_: Biome, Map Feature type
 
 **Creator**:
-An authenticated person who can own and edit multiple maps. Each map has exactly one Creator.
+An invited, authenticated person who owns and edits one Map in the private pilot. Each Map has exactly one Creator.
 _Avoid_: Collaborator, editor
 
-**Creator Profile**:
+**Creator Profile** (deferred):
 A public page containing a Creator's display name, simple biography, and Public Maps. It excludes email addresses and Unlisted Maps.
 _Avoid_: Account, admin profile
 
@@ -110,17 +125,17 @@ A person who anonymously views and interacts with a published map without editin
 _Avoid_: Editor, player
 
 **Draft**:
-The Creator's editable map state, including terrain, Map Features, and Lore. Changes remain invisible to Explorers until publication.
+The Creator's private editable Map state, including terrain, Freehand Drawing, and road/river Feature Strokes in the pilot. Changes remain invisible to Explorers until publication.
 _Avoid_: Working map, unpublished map
 
 **Published Version**:
-The stable terrain, Map Features, and Lore currently visible to Explorers. They change together only when the Creator publishes the Draft.
+The immutable snapshot of retained Map content currently visible to Explorers. The complete snapshot changes only when the Creator explicitly publishes or republishes the Draft.
 _Avoid_: Live draft, public draft
 
 **Public Map**:
-A published map accessible by URL and eligible for site discovery and search.
+A published Map accessible anonymously by its stable URL. Discovery and search are deferred from the pilot.
 _Avoid_: Unlisted Map, Draft
 
-**Unlisted Map**:
+**Unlisted Map** (deferred):
 A published map accessible anonymously by its URL but omitted from site discovery and search.
 _Avoid_: Private map, Public Map

@@ -1,185 +1,44 @@
-# Fantasy Map Builder MVP Implementation Plan
+# Private pilot implementation plan
 
-> **Scope update (2026-09-29):** Phase descriptions below reflect the earlier, broader MVP. Use the [private map pilot decision](agents/private-pilot-scope.md) for the first release boundary, sequence, and gates. Rework phase and issue acceptance before marking new tickets ready.
+This roadmap sequences the current [product specification](product-spec.md) and [technical design](technical-design.md). Live GitHub issue bodies own actionable acceptance and shared status; this document owns dependencies and design gates. Historical Phase 0–6 labels do not add requirements. Local history and passing verification receipts are not readiness or phase status authorities.
 
+## Current handoff
 
-## Delivery strategy
+As of the confirmed 2026-10-04 handoff: Phase 0 is a static staging prototype; #19 dependency maintenance and #27 readiness decisions are closed. Terrain/editor features remain unimplemented. #2 is the next implementation target; #3 depends on it. The owner authorized documentation/harness preparation only: a separate request starts feature implementation. Recheck live issues and code before using this snapshot.
 
-Build vertical slices that remain deployable. First ship a quick staging prototype: a read-only demo map, public R2 asset, and reachable CMS health route. Then build the editor and publication workflow. Defer production domains, operational hardening, and launch checks until those flows work. Every phase ends with observable behavior and automated checks.
+[Phase 1 decisions](agents/phase-1-decisions.md) preserve owner confirmation and risk ownership. Fixed measurement counts are settled; only final performance baseline provision/choice is deferred to final QA preparation. This deferral does not block implementation, but does block performance sign-off and pilot release (#24).
 
-## Current repository layout
+## Retained delivery sequence
 
-```text
-atlas/                 React, PixiJS, and Vite frontend
-atlas-cms/             Strapi application and Cloud Run container
-packages/
-  contracts/           Shared static-map manifest contract
-docs/                  Product, architecture, and agent guidance
-compose.yaml           Local CMS, PostgreSQL, and S3-compatible storage
-```
+| Order | Issues | Deliverable and prerequisite |
+|---|---|---|
+| Completed prerequisite | #19 | Dependency maintenance with explicitly limited upload/mail evidence; not pilot acceptance. |
+| Next | #2 | Blank/generated in-memory terrain, deterministic derivation, viewport, contours, session replacement/recovery. Separate feature authorization first. |
+| Then | #3 | Target-value Brushes, fixed map-space sampling/radius limits, continuous seams, dirty-neighbor updates, per-sample visibility. Uses #2 interfaces. |
+| Then | #4, reduced #6 | Freehand Drawing, basic road/river Feature Strokes, fixed layers and session undo/redo. Remain in memory; #5 Symbol Stamps is deferred. |
+| Contract gate | Before persistence | Confirm retained Canvas Document/release boundaries; source state has no rendering duplicates. |
+| Then | Reduced #7 | Google/Strapi sign-in, invitation/ownership and one Map per Creator. |
+| Then | #8 after #7 | Private terrain Draft saving/restoration. |
+| Then | #9 after #8 | Save/restore complete retained content. |
+| Then | #10 after #9 | Revision conflicts, stale-tab recovery, upload commit ordering/retries and failed-save preservation. |
+| Then | Reduced #14 | Explicit immutable Public publication/republishing after Draft/ownership integration evidence. |
+| Then | Reduced #15 | Anonymous stable-URL Published Version resolution and pan/zoom. |
+| Before real data/invitations | #24 | Invitation controls, abuse limits, backup/retention ownership, timed Draft/Published restore and deployed journey. |
 
-The root npm workspace has one lockfile. Add `domain`, `map-engine`, and `test-support` packages when their Phase 1–3 interfaces are implemented; do not create empty packages now. Keep runtime-specific code out of `contracts`.
+Closed #5, #11–#13, #16–#18, and #20 describe deferred historical work, not delivered features. Public launch requires a later scope decision/ticket.
 
-## Phase 0: Foundation and walking skeleton
+## Design and acceptance gates
 
-### Progress checklist
+Before materially planning each next slice, use `/grill-with-docs` and domain modeling against current code, canonical docs, ADRs, relevant issues, and fresh evidence. Resolve product/architecture contradictions with the owner. Engineering defaults explicitly left to implementers do not require reopening settled product choices.
 
-See the [dated Phase 0 checklist](agents/phase-0-progress.md) for local, cloud, CI, and private R2 denial evidence.
+For #2/#3, implement the confirmed behaviors and bounded future harness in technical design. Record radius limits, stroke semantics, seed conversion, golden cases, screenshot tolerance, and context-recovery limits. Browser correctness and native diagnostics can precede final hardware QA. Visual acceptance requires owner review; final performance remains pending until the chosen baseline is exercised.
 
-### Exit checks
+Before saving, confirm schema, revision, ownership, object validation, upload-before-manifest ordering, and failure preservation. Before publication, confirm immutable release encoding, expected Draft preconditions, pointer-switch rules, retries, and cleanup. Before real data, confirm invitation/access limit, backup owner/frequency/retention/recovery target, and reachable-object cleanup policy.
 
-- CI builds and tests both applications and the shared contract from a clean root install.
-- Local Compose starts PostgreSQL, object store, and CMS; API health is available.
-- Firebase Hosting serves the built SPA from `atlas/dist`; the browser loads one immutable demo map from the published bucket's `r2.dev` URL.
-- A staging Cloud Run service runs the CMS Docker image and answers `GET /api/health` at its default `run.app` URL. Confirm the CMS uses the Neon `staging` branch separately; the health route does not prove database connectivity.
+Required pilot evidence includes private Draft denial, saved Draft restore, two-tab conflict, missing-upload rejection, failed-save/publish preservation, and timed restoration of the current Published Version at its stable URL. Exercise the invited Creator and anonymous Explorer journey through existing staging providers. Preserve #19's accepted limitations as dependency-gate limitations only.
 
-Build with the public R2 manifest URL and deploy Hosting only; Firestore and Functions are not Phase 0 dependencies. Resolve dependency triage issue #19 before starting Phase 1. Private R2 denial is required before Draft uploads, and signed-operation/CORS checks before browser uploads. Triage the high dependency findings in #19 before publicly exposing the CMS. Full budget alerting belongs before production launch.
+## Verification and work records
 
-## Phase 1: Terrain Engine and viewport
+For each coherent micro commit, run meaningful affected checks and stage only owned changes. At task completion run root verification plus applicable browser/integration checks; record exact observed results and skipped checks. [Verification guidance](agents/verification.md) separates local receipts, browser correctness, hardware timing, and deployed acceptance.
 
-The [Phase 1 readiness interview](agents/phase-1-readiness.md) records resolved decisions and open benchmark setup. Issue #19 must close before implementation starts.
-
-### Deliverables
-
-- Deterministic generator with seed, land coverage/sea level, roughness, average temperature, and average moisture.
-- 2048×1024 source fields split into 256×256 tiles.
-- Derived biome colors, water depth, coastline, hill-shading, and contour overlay.
-- PixiJS viewport with pan, zoom, and seamless horizontal wrapping.
-- Elevation, temperature, and moisture brushes.
-- Blank-map and generated-map creation in memory.
-
-Phase 1 and Phase 2 keep Map editing in browser memory. Sign-in and durable Draft persistence begin in Phase 3. The generator records an algorithm version and reproduces the same starting terrain across desktop Chromium and Firefox for the same version, seed, and settings ([ADR 0005](adr/0005-version-generated-terrain.md)).
-
-### Exit checks
-
-- Golden seed tests are deterministic across desktop Chromium and Firefox for a given algorithm version.
-- Seam painting and rendering are continuous.
-- Brush updates recompute only dirty tiles.
-- On a 4-core laptop with 8 GB RAM, an integrated GPU, and Chromium, the 95th percentile from the Generate action to a usable rendered 2048×1024 map is at most 3 seconds, and completed brush actions become visible within 50 ms at the 95th percentile. Record CPU, GPU, operating system, Chromium version, seed, and measurement runs with results.
-
-The exact reference device or CI runner for these budgets remains undecided. Agree on it and the run count before Phase 1 performance acceptance; do not report the budget as passed on an unrecorded machine.
-
-## Phase 2: Canvas artwork and editor behavior
-
-### Deliverables
-
-- Fixed layers and visibility controls.
-- Freehand pen/eraser and lossless art tiles.
-- Built-in hand-drawn sprite sheet and Symbol Stamp transforms.
-- Road and river Feature Strokes.
-- Hotspot placement, radius, visibility, and selection.
-- Session-only command-based undo/redo.
-- Contour default toggle.
-
-### Exit checks
-
-- Object editing follows product rules.
-- Seam-adjacent artwork renders continuously without duplicate saved objects.
-- Undo/redo tests use the Canvas Document interface.
-- Visual regression fixtures cover every layer and representative zoom levels.
-
-## Phase 3: Identity, ownership, and Draft autosave
-
-### Deliverables
-
-- Strapi Users & Permissions Google provider; disable email/password Creator sign-in.
-- Add a Firebase Hosting `/api/**` rewrite to Cloud Run for same-origin browser API calls; keep the Google OAuth backend callback URL explicit.
-- Strapi refresh-mode session with a secure, HttpOnly `__session` cookie configured for Hosting-to-Cloud Run forwarding.
-- Creator profile creation and editing.
-- Map list/create/rename/delete flows.
-- Task-oriented private routes with centralized ownership policy.
-- Private R2 upload plans and presigned URLs.
-- Incremental Draft autosave and load.
-- Optimistic revision conflicts with a safe stale-tab UI.
-- Regeneration warning and exact cleanup behavior.
-
-### Exit checks
-
-- An authenticated Creator cannot access another Creator's Draft or signed URLs.
-- Browser tests prove Google sign-in and refresh through Firebase Hosting and Cloud Run, including `__session` forwarding.
-- Refresh restores the latest committed Draft.
-- Injected upload failures never commit manifests referencing missing objects.
-- Two-tab tests prove stale saves return conflict instead of overwriting.
-
-## Phase 4: Lore and interactive map content
-
-### Deliverables
-
-- Point of Interest names, Feature Summaries, and same-map Lore relations.
-- Lore Entry rich-text editor, cover/inline images, Lore Tags, and related Lore Entries.
-- Browser-to-R2 image uploads with server verification.
-- Creator-side Lore browsing and search.
-- Explorer Hotspot panel and Lore navigation against a development snapshot.
-
-### Exit checks
-
-- Many-to-many and self-relations enforce same-map rules.
-- Rich text is sanitized and image types/sizes are restricted.
-- Hotspot selection works with visible and invisible markers.
-- Keyboard and screen-reader behavior is verified for all DOM controls and Lore content.
-
-## Phase 5: Atomic publication and Explorer experience
-
-### Deliverables
-
-- Start/finalize publication workflow.
-- Browser-rendered base map, contour overlay, and thumbnail uploads.
-- Server-built immutable public manifest.
-- Transactional `publishedReleaseId` pointer switch and search projection replacement.
-- Public and Unlisted routes.
-- Responsive Explorer experience for desktop, tablet, and phone.
-- Local within-map search and global Public Map discovery/search.
-- Minimal Creator Profile pages.
-
-### Exit checks
-
-- Failure injection at every publish stage preserves the prior Published Version.
-- Draft edits never leak into public payloads.
-- Unlisted Maps resolve by URL but never appear in search/profile listings.
-- Anonymous map loading requires no Strapi credential.
-- Public assets use immutable URLs and expected cache headers.
-
-## Phase 6: Moderation, deletion, and launch hardening
-
-### Deliverables
-
-- Report link to external Google Form.
-- Administrator actions to unlist/unpublish maps and suspend Creators.
-- Typed-name map deletion and Creator account deletion.
-- Idempotent asynchronous cleanup jobs for database and R2 content.
-- Rate limits, security headers, dependency scanning, backup/runbook documentation, and cost dashboards.
-- Unsupported-browser and recoverable network-error experiences.
-
-### Exit checks
-
-- Moderated, suspended, and deleted maps disappear immediately from public map routes, discovery, and search. Direct immutable asset URLs may remain readable until asynchronous cleanup and cache expiry.
-- Deletion removes map-route access before background cleanup begins.
-- Cleanup retries safely and leaves an auditable operational result.
-- End-to-end Creator and Explorer acceptance journeys pass in staging.
-- Production Firebase Hosting, Cloud Run, and R2 subdomains under `kofeejan.com`, launch checklist, and rollback procedure are complete. Disable public `r2.dev` access after production asset routing is verified.
-
-## Cross-cutting test matrix
-
-| Risk | Required evidence |
-|---|---|
-| Horizontal wrapping | Terrain, artwork, strokes, stamps, Hotspots, pan, and search selection tested at seam |
-| Data loss | Upload-before-manifest ordering, optimistic concurrency, retry, refresh recovery |
-| Partial publication | Failure injection, immutable keys, transactional pointer switch |
-| Draft leakage | Authorization and public-query leakage tests |
-| Cross-map relations | Database constraints/service validation tests |
-| Public moderation | Immediate map-route, discovery, and search removal tests; document direct-asset cleanup and cache limits |
-| Cost growth | Object count/storage metrics, cleanup metrics, provider budget alerts |
-| Browser performance | Deterministic performance scene, texture memory, brush latency, initial load |
-
-## Deferred backlog
-
-- Touch-first Creator editing.
-- Custom stamp/brush uploads and asset packs.
-- Arbitrary layers, groups, blending, and vector control-point editing.
-- More palettes and terrain rendering styles.
-- Collaboration and shared ownership.
-- User-facing history, recovery, exports, and print rendering.
-- Social features, Explorer accounts, comments, reactions, and follows.
-- Automated moderation.
-- Dynamic world simulation and hydrology.
-
+Current requirements live here and in canonical docs; issue closure needs its own acceptance evidence. Use [the milestone logger](agents/build-log-template.md) for append-only local scope/decision/architecture/implementation history. A history entry neither authorizes scope nor proves acceptance.

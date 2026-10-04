@@ -1,6 +1,6 @@
 # Phase 1 readiness interview
 
-Recorded 2026-09-28 while organizing the Phase 0 handoff. This is a decision record, not a claim that Phase 1 implementation or performance acceptance has begun.
+Recorded 2026-09-28 while organizing the Phase 0 handoff. This is a historical decision record, not a claim that Phase 1 implementation or performance acceptance has begun. The confirmed questionnaire is recorded in [phase-1-decisions.md](phase-1-decisions.md); current requirements and sequencing live in the product specification, technical design, and implementation plan. Issue #19 is closed; earlier open-gate statements below are historical.
 
 ## Sources checked
 
@@ -25,3 +25,7 @@ Before implementation, rerun `/grill-with-docs` against the then-current code an
 The dependency maintenance acceptance checks for issue #19 have now been exercised: Strapi 5.56.0 with reviewed runtime dependency versions, 23 CMS integration tests, final production image and PostgreSQL startup, isolated Neon candidate/previous-image compatibility, and staged Cloud Run/Firebase Hosting rollout. The fresh audit contains 21 package entries (3 high, 17 moderate, 1 low); runtime patches and residual development-tool exposure are documented in [strapi-safe-upgrade.md](../runbooks/strapi-safe-upgrade.md). The user accepted precise deployed mail delivery and durable R2 upload limitations for this dependency gate only. The live GitHub issue carries final closure status.
 
 Phase 1 remains not started. Its benchmark setup and the fresh readiness interview remain necessary before implementation; dependency verification does not establish terrain performance, Creator readiness, authentication acceptance, or pilot data recovery.
+
+## Confirmed readiness update — 2026-10-04
+
+The owner confirmed Q1–Q18 in #27's interview. See [phase-1-decisions.md](phase-1-decisions.md) for the consolidated decisions, risk owners, required future harness work, and next-step authorization. #2 is the next implementation target; #3 depends on #2. Preparation only is authorized. Native hardware supports development diagnostics; the owner will choose the final acceptance baseline during final QA preparation. Performance sign-off and pilot release remain blocked until the chosen baseline is exercised. No terrain, Brush, browser determinism, or performance acceptance has been demonstrated by this interview.

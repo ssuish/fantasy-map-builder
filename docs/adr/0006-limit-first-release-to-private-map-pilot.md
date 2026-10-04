@@ -1,0 +1,3 @@
+# Limit the first release to a private map pilot
+
+The earlier MVP combined map creation with Lore, discovery, moderation, deletion, and production operations. The first release instead allows each invited Creator one Map with private Draft editing, Public immutable publication, and safe republishing; anonymous Explorers only view and navigate the Map. This retains the create–save–publish–view journey and its data-safety obligations while deferring other product surfaces. Keep the existing staging providers because Phase 0 already exercises their static-map path, but require separate proof of authentication, storage, and publication. The current boundary is maintained in docs/product-spec.md; docs/agents/private-pilot-scope.md preserves decision provenance.

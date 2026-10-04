@@ -1,99 +1,25 @@
-# Repository Guidelines
+# Repository instructions
 
-## Project Structure & Module Organization
+## Workspace and privacy
 
-The root npm workspace contains `atlas/` (React, PixiJS, and Vite), `atlas-cms/` (Strapi), and `packages/contracts/` (shared static-map contract). Use the root `package-lock.json` and run workspace commands from the repository root. App-specific instructions live in each app's `AGENTS.md`. Keep shared code in focused packages rather than duplicating contracts.
+Use the root npm workspace and lockfile. Run workspace commands from the repository root; app-specific instructions are in `atlas/AGENTS.md` and `atlas-cms/AGENTS.md`. Keep shared contracts in focused packages.
 
-## Current project scope
+`CREDENTIALS.md` and all `.env` variants except `.env.example` are private. Never read, search, quote, copy, stage, or transmit their contents. Inspect filenames/ignore status only when needed. Keep them out of Git and Docker contexts; `.env.example` contains placeholders only.
 
-The first release is a private pilot. Read `docs/agents/private-pilot-scope.md` before planning, implementing, reviewing, or verifying feature work. It takes precedence over the older broad MVP sections of `docs/product-spec.md`, `docs/technical-design.md`, `docs/data-model.md`, `docs/implementation-plan.md`, and `ARCHITECTURE.md`. Those documents contain historical proposals, not pilot acceptance.
+## Task routing
 
-Each invited Creator may own one fixed 2048×1024 Map: blank or deterministic generated terrain, elevation/temperature/moisture Brushes, Freehand Drawing, basic road/river Feature Strokes, session undo/redo, private Draft save/restore, and explicit Public immutable publication/republishing. Anonymous Explorers can open a stable URL and pan/zoom the Published Version. Use the existing Firebase Hosting, Cloud Run/Strapi, Neon staging, and R2 path. Pilot acceptance requires ownership isolation, revision conflicts, upload-before-manifest ordering, failed-publish preservation, and an exercised Draft/Published Version restore before real Creator data is accepted.
+- **Scope:** Before feature planning, implementation, review, or acceptance, read [product specification](docs/product-spec.md) and the relevant live issue. For delivery dependencies read [implementation plan](docs/implementation-plan.md). Deferred work requires an explicit scope decision.
+- **Design:** Before changing terminology, contracts, or responsibilities, read [domain authority](docs/agents/domain.md), relevant technical/data design, and ADRs.
+- **Plan:** Before planning/replanning a slice, coordinating workers, or saving a plan, follow [workflow](docs/agents/workflow.md). Owner-confirmed decisions and authorization must be explicit.
+- **Explore:** For code structure, declarations, or syntax patterns, follow [exploration](docs/agents/exploration.md): rg locates files/text; repository tree-sitter command inspects syntax.
+- **Commit:** Commit each coherent reviewable action after affected checks; stage only owned paths. Follow [workflow](docs/agents/workflow.md) for micro commits and professional commit/PR text.
+- **Verify:** Before committing/completing work or reusing evidence, follow [verification](docs/agents/verification.md). Full task verification and required browser/integration evidence remain separate from issue acceptance.
+- **History:** At material scope/decision/architecture/implementation milestones or corrections, run the script described in [local history](docs/agents/build-log-template.md). History is append-only provenance, independent of the harness.
+- **Issues:** Before reading/updating acceptance, labels, or shared status, follow [GitHub procedure](docs/agents/issue-tracker.md).
+- **Operations:** For local services, deployment, provider configuration, or recovery, use the relevant [runbook](docs/runbooks/README.md) and product skill. Report observed evidence and limits.
 
-Symbol Stamps, regeneration, Hotspots, Points of Interest, Lore, Unlisted mode, search, discovery, Creator Profile pages, moderation, deletion, production launch, and touch-first editing are outside the pilot. Closed issues #5, #11–#13, #16–#18, and #20 are historical, not completed. #19 is the current ready-for-work gate; retained pilot work is in #2–#4, #6–#10, #14–#15, and pilot-readiness #24. Do not add deferred work or use legacy phase acceptance as a pilot requirement without a new scope decision.
+## Framework and cloud skills
 
-## Build, Test, and Development Commands
+For PixiJS use `atlas/.agents/skills/pixijs/SKILL.md`. For Strapi use `atlas-cms/.agents/skills/strapi-docs-mcp/SKILL.md`. For Cloud Run/gcloud use matching root skills, including `gcloud` for every gcloud command. For Neon use `.agents/skills/neon/SKILL.md`, confirm `neon status` before mutation, and target staging explicitly: local context may point to production. Pull credentials into local env files only when explicitly requested.
 
-Run `npm ci` at the root. Use `npm run dev:web` and `npm run dev:cms` for local apps; use `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`, and `npm run verify -- --task <slug>` for checks. `docker compose up --build` starts the local CMS, PostgreSQL, and object store. Run relevant checks before submitting changes and report checks that could not be run.
-
-## Coding Style & Naming Conventions
-
-Follow the formatter, linter, and language conventions adopted by the project when they are introduced. Use descriptive, consistent names: `PascalCase` for component or type names where the language convention calls for it, and `camelCase` for values and functions. Keep modules small and format files consistently; avoid adding a second formatter or linter without a clear need.
-
-## Testing Guidelines
-
-Put tests beside their implementation or in the app's test directory. Cover observable behavior and relevant edge cases, including shared contracts and health routes. Run affected tests and include the exact command in the pull request.
-
-## Commit & Pull Request Guidelines
-
-Write concise, imperative commit subjects that describe the change. Pull requests should explain the motivation and implementation, list validation performed, link related issues when applicable, and include screenshots for user-facing visual changes.
-
-## Configuration & Secrets
-
-`CREDENTIALS.md` and all `.env` variants except `.env.example` are private. Do not read, search, quote, copy, stage, or transmit their contents. Check file names or ignore status without opening them when needed. Keep these files out of version control and Docker build contexts. Add only placeholder values to `.env.example` files and document required variables there.
-
-## Agent skills
-
-### Issue tracker
-
-Issues live in GitHub Issues; use `gh`. See `docs/agents/issue-tracker.md`.
-
-### Domain docs
-
-Single-context layout. See `docs/agents/domain.md`.
-
-### Phase planning interview
-
-Before planning or materially replanning the next implementation phase, invoke
-`/grill-with-docs` and the domain-modeling discipline. Compare the live code,
-`CONTEXT.md`, ADRs, product specification, roadmap, build evidence, and relevant
-GitHub issues. Identify missing, ambiguous, or contradictory requirements and
-ask the user to resolve decisions that cannot be inferred. Record resolved domain
-terms in `CONTEXT.md` and durable trade-offs in an ADR when warranted. Update
-phase scope and issue acceptance only after the decisions are clear; never treat
-an unanswered question as approval or a planned check as passing evidence.
-
-### Framework and cloud skills
-
-- For PixiJS work in `atlas/`, start with `atlas/.agents/skills/pixijs/SKILL.md`; it routes to the relevant PixiJS skill. Use only the skills relevant to the task.
-- For Strapi work in `atlas-cms/`, use `atlas-cms/.agents/skills/strapi-docs-mcp/SKILL.md` and current Strapi documentation.
-- For Google Cloud Run or `gcloud` work, use the matching skill under `.agents/skills/` (notably `cloud-run-basics` and `gcloud`). Use other Google Cloud architecture, alerting, or Well-Architected skills only when the task calls for them.
-- For Neon work, use `.agents/skills/neon/SKILL.md` and `neon status` to confirm target before mutation. The Neon `staging` branch exists, but this workspace links `production`; target `staging` explicitly for staging work and avoid pulling credentials into local env files unless requested.
-- `skills-lock.json` in each app records installed skill sources. Do not treat it as an application dependency lockfile.
-- Installed skills and `.codex/` are local-only. When absent, use current official documentation and the tracked setup instructions.
-
-## Plan files
-
-- When Plan mode produces an implementation plan, save its final version as `docs/agents/plans/<slug>/PLAN.md`. Use a short lowercase kebab-case slug from the plan name; create the directory if needed. Include the goal, scope, implementation steps, and validation criteria. Give the file path in the final response.
-- When asked to implement an existing plan, find its `PLAN.md` under `docs/agents/plans/` by name or slug and use it as task context. If Plan mode does not permit file writes, provide the plan in the response and save it when write access resumes.
-
-## Build evidence
-
-- `docs/agents/build-logs/build-log.md` is the Git-ignored local source of truth for observed phase progress. Before closing a phase, update its Phase 0–6 summary only from acceptance evidence and append a dated activity entry; preserve failed attempts and correct earlier entries by appending a correction. GitHub issues carry shared cross-clone status.
-- Run `npm run verify -- --task <slug> [--phase <0-6>]` to write a Git-ignored task receipt at `docs/agents/build-logs/<slug>/STATUS.md` and append task verification activity. The optional phase flag labels activity; passing checks do not complete a phase. Reuse a receipt only if Git HEAD and the working-tree fingerprint still match; otherwise rerun affected checks. Never put secrets, arbitrary caller text, or raw application logs in these files.
-
-The Phase 0–6 rows and optional `--phase` flag retain the original phase labels for historical evidence. For pilot work, use a task receipt without `--phase` unless the work genuinely belongs to a retained, clearly mapped phase. Former Phase 4 Lore and Phase 6 launch acceptance are not pilot gates. A passing receipt does not prove pilot acceptance; use issue criteria and #24's deployed recovery evidence.
-
-## Agent workflow
-
-- Keep planning, architecture, product decisions, integration decisions, and
-  final synthesis with the primary agent. Use its selected default model and
-  reasoning settings.
-- Delegate clear, bounded, independently verifiable implementation, research,
-  test, script, and batch tasks to `luna_worker` when delegation saves primary
-  agent work or supervision.
-- Use one Luna worker by default. Use two only when the assignments are genuinely
-  independent; do not create parallel workers for overlapping exploration or
-  implementation.
-- Use GPT-5.6 Luna with high reasoning by default for delegated tasks, including
-  feature implementation. Use max reasoning for most ambiguous implementations.
-  Lower effort only for mechanical read-only lookup or repetitive work without
-  design or code changes. Workers must not spawn additional agents.
-- Give each worker a concise brief containing its objective, working directory,
-  relevant files and context, authorized actions, owned files when editing, and
-  completion checks. Prefer `fork_turns="none"` when the brief is sufficient.
-- Require every worker result to state status, summarize the outcome, cite
-  concrete evidence, report validation performed, and identify any remaining
-  blocker or decision.
-- Keep final integration and user-facing conclusions with the primary agent.
-  Reconcile worker output against current repository state before accepting it.
+Installed skills and `.codex/` are local-only; restore them or use official documentation and tracked setup guidance when absent. `skills-lock.json` records skill sources, not application dependencies. Prefer Context7 for current library/framework docs and resolve its library ID first.
