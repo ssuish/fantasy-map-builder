@@ -55,6 +55,11 @@ const isPrivatePath = (candidate) => {
     (part.startsWith(".env") && part !== ".env.example") || /^CREDENTIALS(?:\.|$)/i.test(part),
   );
 };
+const isLocalEvidencePath = (candidate) => {
+  const normalized = candidate.replaceAll("\\", "/");
+  return normalized === "docs/agents/build-logs" || normalized.startsWith("docs/agents/build-logs/") ||
+    normalized === "docs/agents/verification" || normalized.startsWith("docs/agents/verification/");
+};
 
 const assertSafeOutputPath = (absolutePath) => {
   const resolved = resolve(absolutePath);
@@ -82,7 +87,7 @@ const safeGitDiff = (staged) => {
     encoding: "buffer",
     maxBuffer: 20 * 1024 * 1024,
   }).toString("utf8").split("\0").filter(Boolean);
-  return names.filter((name) => !isPrivatePath(name)).map((name) =>
+  return names.filter((name) => !isPrivatePath(name) && !isLocalEvidencePath(name)).map((name) =>
     execFileSync("git", ["diff", ...(staged ? ["--cached"] : []), "--binary", "--", ":(literal)" + name], {
       cwd: root,
       encoding: "buffer",
@@ -96,7 +101,7 @@ const untrackedFingerprint = () => {
     cwd: root,
     encoding: "buffer",
     maxBuffer: 20 * 1024 * 1024,
-  }).toString("utf8").split("\0").filter(Boolean).sort();
+  }).toString("utf8").split("\0").filter(Boolean).filter((path) => !isLocalEvidencePath(path)).sort();
   return paths.map((path) => {
     const absolute = resolve(root, path);
     let info;
@@ -141,7 +146,11 @@ const writeAtomic = (target, content) => {
 const head = git("rev-parse", "HEAD");
 const branch = git("branch", "--show-current") || "detached";
 const startedAt = new Date().toISOString();
-const status = git("status", "--porcelain=v1", "--untracked-files=all");
+const status = execFileSync("git", ["status", "--porcelain=v1", "--untracked-files=all", "-z"], {
+  cwd: root,
+  encoding: "utf8",
+  maxBuffer: 20 * 1024 * 1024,
+}).split("\0").filter(Boolean).filter((entry) => !isLocalEvidencePath(entry.slice(3))).join("\n");
 const fingerprint = treeFingerprint(head, status);
 assertSafeOutputPath(receiptPath);
 const checks = ["lint", "typecheck", "test", "build"];

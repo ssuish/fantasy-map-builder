@@ -89,6 +89,31 @@ test("malformed legacy build logs remain untouched and no legacy log is read", (
   assert.equal(readFileSync(path, "utf8"), legacy);
 });
 
+test("legacy log content is excluded from reads, status, and receipt freshness", (t) => {
+  const fixture = createFixture();
+  t.after(fixture.cleanup);
+  const path = join(fixture.root, "docs", "agents", "build-logs", "build-log.md");
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, "legacy one\n");
+  const guard = join(fixture.root, "read-guard.cjs");
+  writeFileSync(guard, [
+    "const fs = require('node:fs');",
+    "const read = fs.readFileSync;",
+    "fs.readFileSync = function(path, ...args) {",
+    "  if (String(path).includes('docs/agents/build-logs')) throw new Error('legacy log read');",
+    "  return read.call(this, path, ...args);",
+    "};",
+  ].join("\n"));
+  const env = { NODE_OPTIONS: "--require=" + guard };
+  let result = run(fixture, ["--task", "legacy-freshness"], env);
+  assert.equal(result.status, 0, result.stderr);
+  const first = fingerprint(fixture, "legacy-freshness");
+  writeFileSync(path, "legacy two\n");
+  result = run(fixture, ["--task", "legacy-freshness"], env);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(fingerprint(fixture, "legacy-freshness"), first);
+});
+
 test("fingerprint changes with untracked content and excludes private contents", (t) => {
   const fixture = createFixture();
   t.after(fixture.cleanup);

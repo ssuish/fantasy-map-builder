@@ -161,6 +161,34 @@ const importsFor = (node) => {
   }
   return result;
 };
+const commonjsImportsFor = (node) => {
+  if (node.type !== "lexical_declaration" && node.type !== "variable_declaration") return [];
+  const result = [];
+  for (const declarator of namedChildren(node).filter((child) => child.type === "variable_declarator")) {
+    const value = declarator.childForFieldName("value");
+    const name = declarator.childForFieldName("name");
+    if (value?.type !== "call_expression" || value.childForFieldName("function")?.text !== "require") continue;
+    const source = stringValue(value.childForFieldName("arguments")?.namedChildren[0]);
+    if (source === undefined || !name || name.type !== "identifier") continue;
+    result.push(item(name.text, "require", name, { source }));
+  }
+  return result;
+};
+const commonjsExportsFor = (node) => {
+  if (node.type !== "expression_statement") return [];
+  const assignment = node.namedChildren.find((child) => child.type === "assignment_expression");
+  const left = assignment?.childForFieldName("left");
+  if (!left || left.type !== "member_expression") return [];
+  const object = left.childForFieldName("object");
+  const property = left.childForFieldName("property");
+  const moduleExports = object?.type === "identifier" && object.text === "module" && property?.text === "exports";
+  const nestedModuleExports = object?.type === "member_expression" &&
+    object.childForFieldName("object")?.text === "module" && object.childForFieldName("property")?.text === "exports";
+  if (moduleExports) return [item("default", "commonjs", left)];
+  if (nestedModuleExports && property) return [item(property.text, "commonjs", property)];
+  if (object?.type === "identifier" && object.text === "exports" && property) return [item(property.text, "commonjs", property)];
+  return [];
+};
 
 const declarationNodeTypes = new Map([
   ["function_declaration", "function"],
@@ -211,7 +239,16 @@ const exportsFor = (node) => {
       const alias = specifier.childForFieldName("alias");
       if (name) result.push(item(alias?.text ?? name.text, alias ? "alias" : "named", alias ?? name, { source, local: name.text }));
     }
-  } else if (node.childForFieldName("value")) {
+  } else {
+    const namespace = node.namedChildren.find((child) => child.type === "namespace_export");
+    const namespaceName = namespace?.namedChildren.at(-1);
+    if (namespaceName) {
+      result.push(item(namespaceName.text, "namespace", namespaceName, { source }));
+    } else if (source !== undefined) {
+      result.push(item("*", "star", node, { source }));
+    }
+  }
+  if (result.length === 0 && node.childForFieldName("value")) {
     result.push(item("default", "default", node, { source }));
   }
   return result;
@@ -235,7 +272,9 @@ const inspect = (absolute) => {
   const declarations = [];
   for (const child of namedChildren(tree.rootNode)) {
     if (child.type === "import_statement") imports.push(...importsFor(child));
+    imports.push(...commonjsImportsFor(child));
     if (child.type === "export_statement") exports.push(...exportsFor(child));
+    exports.push(...commonjsExportsFor(child));
     declarations.push(...declarationItems(child.type === "export_statement" ? child.childForFieldName("declaration") : child));
   }
   const result = {
